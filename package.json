@@ -4,9 +4,20 @@
 	"description": "Backend de una plataforma de comercio electrónico B2B (Business-to-Business) está diseñada para facilitar las transacciones entre empresas.",
 	"main": "index.js",
 	"scripts": {
-		"test": "echo \"Error: no test specified\" && exit 1"
+		"dev": "nodemon index.js",
+		"start": "node index.js",
+		"lint": "eslint"
 	},
-	"keywords": [],
+	"keywords": [
+		"circuittrade",
+		"backend",
+		"b2b",
+		"api",
+		"rest",
+		"express",
+		"sequelize",
+		"mysql"
+	],
 	"author": "BrandonDevU95",
 	"license": "MIT",
 	"devDependencies": {
