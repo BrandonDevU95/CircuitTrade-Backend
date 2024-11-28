@@ -8,7 +8,7 @@ module.exports = {
 	development: {
 		url: URI,
 		dialect: 'mysql',
-		logging: false,
+		logging: treu,
 	},
 	production: {
 		url: URI,
