@@ -1,6 +1,6 @@
 require('dotenv').config();
 const { config } = require('./src/config/config');
-
+const routerApi = require('./src/routes');
 const express = require('express');
 const configureCors = require('./src/middlewares/cors');
 const {
@@ -21,6 +21,7 @@ app.get('/', (req, res) => {
 });
 
 //Routes
+routerApi(app);
 
 app.use(logErrors);
 app.use(ormErrorHandler);
