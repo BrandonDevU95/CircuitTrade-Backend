@@ -39,10 +39,10 @@ const CompanySchema = {
 
 class Company extends Model {
 	static associate(models) {
-		// this.hasMany(models.Product, {
-		//     as: 'products',
-		//     foreignKey: 'companyId',
-		// });
+		this.hasMany(models.User, {
+			foreignKey: 'companyId',
+			as: 'users',
+		});
 	}
 
 	static config(sequelize) {
