@@ -30,13 +30,8 @@ const getCompanySchema = Joi.object({
 	id: id.required(),
 });
 
-const deleteCompanySchema = Joi.object({
-	id: id.required(),
-});
-
 module.exports = {
 	createCompanySchema,
 	updateCompanySchema,
 	getCompanySchema,
-	deleteCompanySchema,
 };
