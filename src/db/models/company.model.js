@@ -19,7 +19,9 @@ const CompanySchema = {
 		maxLength: 13,
 		unique: true,
 		set(value) {
-			this.setDataValue('rfc', value.toUpperCase().trim());
+			// Se usa el método helper para normalizar el RFC.
+			// Esto centraliza la transformación y evita duplicación.
+			this.setDataValue('rfc', this.constructor.normalizeRfc(value));
 		},
 	},
 	address: {
@@ -39,7 +41,8 @@ const CompanySchema = {
 		type: DataTypes.STRING,
 		unique: true,
 		set(value) {
-			this.setDataValue('email', value.toLowerCase().trim());
+			// Se usa el método helper para normalizar el email.
+			this.setDataValue('email', this.constructor.normalizeEmail(value));
 		},
 	},
 	type: {
@@ -65,32 +68,43 @@ class Company extends Model {
 			indexes: [
 				{
 					unique: true,
-					name: 'unique_company_composite', // Nombre descriptivo
+					name: 'unique_company_composite', // Índice compuesto
 					fields: ['name', 'rfc'],
 				},
 				{
 					unique: true,
-					fields: ['rfc'], // Índice único individual para RFC
+					fields: ['rfc'], // Índice único para RFC
 				},
 				{
 					unique: true,
-					fields: ['email'], // Índice único individual para email
+					fields: ['email'], // Índice único para email
 				},
 			],
 			hooks: {
 				beforeSave: (company) => {
-					if (company.changed('email')) {
-						company.email = company.email.toLowerCase().trim();
+					// Se utiliza la función helper para normalizar
+					// los campos 'email' y 'rfc' en el hook, centralizando la lógica.
+					if (company.changed('email') && company.email) {
+						company.email = Company.normalizeEmail(company.email);
 					}
-					if (company.changed('rfc')) {
-						company.rfc = company.rfc
-							.toUpperCase()
-							.replace(/[^A-Z0-9&Ñ]/g, '')
-							.trim();
+					if (company.changed('rfc') && company.rfc) {
+						company.rfc = Company.normalizeRfc(company.rfc);
 					}
 				},
 			},
 		};
+	}
+
+	// Métodos helper para centralizar la normalización de datos.
+	static normalizeEmail(email) {
+		return email.toLowerCase().trim();
+	}
+
+	static normalizeRfc(rfc) {
+		return rfc
+			.toUpperCase()
+			.replace(/[^A-Z0-9&Ñ]/g, '')
+			.trim();
 	}
 }
 
