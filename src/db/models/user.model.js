@@ -11,25 +11,41 @@ const UserSchema = {
 	},
 	name: {
 		allowNull: false,
-		type: DataTypes.STRING,
+		type: DataTypes.STRING(100),
+		validate: {
+			len: [3, 100],
+		},
 	},
 	password: {
 		allowNull: false,
-		type: DataTypes.STRING,
+		type: DataTypes.STRING(255),
+		validate: {
+			len: [6, 255],
+		},
 	},
 	email: {
 		allowNull: false,
-		type: DataTypes.STRING,
+		type: DataTypes.STRING(100),
 		unique: true,
+		set(value) {
+			this.setDataValue('email', value.toLowerCase().trim());
+		},
 	},
 	phone: {
 		allowNull: true,
-		type: DataTypes.STRING,
+		type: DataTypes.STRING(15),
+		validate: {
+			is: /^\+?[0-9]{7,15}$/,
+		},
 	},
 	companyId: {
 		allowNull: false,
 		field: 'company_id',
 		type: DataTypes.INTEGER,
+		references: {
+			model: 'companies',
+			key: 'id',
+		},
 	},
 };
 
@@ -53,6 +69,25 @@ class User extends Model {
 			tableName: USER_TABLE,
 			modelName: 'User',
 			timestamps: true,
+			hooks: {
+				beforeSave: (user) => {
+					if (user.changed('email')) {
+						user.email = user.email.toLowerCase().trim();
+					}
+					if (user.changed('phone') && user.phone) {
+						user.phone = user.phone.replace(/[^0-9+]/g, '');
+					}
+				},
+			},
+			indexes: [
+				{
+					unique: true,
+					fields: ['email'],
+				},
+				{
+					fields: ['company_id'],
+				},
+			],
 		};
 	}
 }
