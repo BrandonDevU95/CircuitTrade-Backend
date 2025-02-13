@@ -4,7 +4,8 @@ const id = Joi.number().integer();
 const name = Joi.string()
 	.min(3)
 	.max(50)
-	.pattern(/^[a-z0-9_]+$/);
+	.pattern(/^[a-zA-Z ]+$/)
+	.trim();
 const description = Joi.string().min(3).max(255).trim();
 
 const createRoleSchema = Joi.object({
