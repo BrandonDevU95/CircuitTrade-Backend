@@ -13,10 +13,20 @@ const RoleSchema = {
 		allowNull: false,
 		type: DataTypes.STRING,
 		unique: true,
+		set(value) {
+			// Normalización automática
+			this.setDataValue(
+				'name',
+				value.toLowerCase().trim().replace(/\s+/g, '_')
+			);
+		},
 	},
 	description: {
 		allowNull: false,
-		type: DataTypes.STRING,
+		type: DataTypes.STRING(255),
+		validate: {
+			len: [3, 255],
+		},
 	},
 };
 
@@ -36,6 +46,25 @@ class Role extends Model {
 			tableName: ROLE_TABLE,
 			modelName: 'Role',
 			timestamps: true,
+			hooks: {
+				beforeSave: (role) => {
+					if (role.changed('name')) {
+						role.name = role.name
+							.toLowerCase()
+							.trim()
+							.replace(/\s+/g, '_');
+					}
+				},
+			},
+			indexes: [
+				{
+					unique: true,
+					fields: ['name'],
+				},
+				{
+					fields: ['description'],
+				},
+			],
 		};
 	}
 }
