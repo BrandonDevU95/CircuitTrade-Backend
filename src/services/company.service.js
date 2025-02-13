@@ -1,4 +1,5 @@
 const boom = require('@hapi/boom');
+const sequelize = require('../lib/sequelize');
 
 const { models } = require('./../lib/sequelize');
 
@@ -8,18 +9,50 @@ class CompanyService {
 	}
 
 	async create(data) {
-		const newCompany = await this.model.create(data);
-		return newCompany;
+		const transaction = await sequelize.transaction();
+		const { rfc, email, ...companyData } = data;
+		const emailLower = email.toLowerCase();
+		const rfcUpper = rfc.toUpperCase();
+
+		try {
+			const existingCompany = await this.model.findOne({
+				where: { rfc: rfcUpper },
+				transaction,
+			});
+
+			if (existingCompany) {
+				throw boom.conflict('Company already exists with this RFC');
+			}
+
+			const newCompany = await this.model.create(
+				{ ...companyData, rfc: rfcUpper, email: emailLower },
+				{ transaction }
+			);
+
+			await transaction.commit();
+			return newCompany;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	async update(id, data) {
-		const company = await this.model.findByPk(id);
-		if (!company) {
-			throw boom.notFound('company not found');
-		}
+		const transaction = await sequelize.transaction();
+		try {
+			const company = await this.model.findByPk(id, { transaction });
 
-		const updatedCompany = await company.update(data);
-		return updatedCompany;
+			if (!company) {
+				throw boom.notFound('company not found');
+			}
+
+			const updatedCompany = await company.update(data);
+			await transaction.commit();
+			return updatedCompany;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	async delete(id) {
