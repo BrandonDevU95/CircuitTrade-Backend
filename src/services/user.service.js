@@ -1,4 +1,5 @@
 const boom = require('@hapi/boom');
+const sequelize = require('../lib/sequelize');
 
 const { models } = require('./../lib/sequelize');
 
@@ -8,58 +9,102 @@ class userService {
 	}
 
 	async create(data) {
-		//TODO: Implementar transacciones para asegurar que se creen los usuarios y la empresa
-		const { rfc, email, ...userData } = data;
-		const emailLower = email.toLowerCase();
-		const rfcUpper = rfc.toUpperCase();
+		const transaction = await sequelize.transaction();
 
-		const existingUser = await this.model.findOne({
-			where: {
-				email: emailLower,
-			},
-		});
+		try {
+			const { rfc, email, ...userData } = data;
+			const emailLower = email.toLowerCase();
+			const rfcUpper = rfc.toUpperCase();
 
-		if (existingUser) {
-			throw boom.badRequest('user already exists');
+			const existingUser = await this.model.findOne({
+				where: {
+					email: emailLower,
+				},
+				transaction,
+			});
+
+			if (existingUser) {
+				throw boom.badRequest('User already exists');
+			}
+
+			const company = await models.Company.findOne({
+				where: {
+					rfc: rfcUpper,
+				},
+				transaction,
+			});
+
+			if (!company) {
+				throw boom.badRequest('Company not found');
+			}
+
+			const newUser = await this.model.create(
+				{
+					...userData,
+					email: emailLower,
+					companyId: company.id,
+				},
+				{ transaction }
+			);
+
+			await transaction.commit();
+			return newUser;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
 		}
-
-		const company = await models.Company.findOne({
-			where: {
-				rfc: rfcUpper,
-			},
-		});
-
-		if (!company) {
-			throw boom.badRequest('company not found');
-		}
-
-		const newUser = await this.model.create({
-			...userData,
-			email: emailLower,
-			companyId: company.id,
-		});
-
-		return newUser;
 	}
 
 	async update(id, data) {
-		const user = await this.model.findByPk(id);
-		if (!user) {
-			throw boom.notFound('user not found');
-		}
+		const transaction = await sequelize.transaction();
+		const emailLower = data.email.toLowerCase();
 
-		const updatedUser = await user.update(data);
-		return updatedUser;
+		try {
+			const user = await this.model.findByPk(id, { transaction });
+
+			if (!user) {
+				throw boom.notFound('User not found');
+			}
+
+			if (data.email) {
+				const existingUser = await this.model.findOne({
+					where: {
+						email: emailLower,
+					},
+					transaction,
+				});
+
+				if (existingUser && existingUser.id !== id) {
+					throw boom.badRequest('Email already exists');
+				}
+			}
+
+			const updaterUser = await user.update(data, { transaction });
+			await transaction.commit();
+			return updaterUser;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	async delete(id) {
-		const user = await this.model.findByPk(id);
-		if (!user) {
-			throw boom.notFound('user not found');
-		}
+		const transaction = await sequelize.transaction();
 
-		await user.destroy();
-		return { id };
+		try {
+			const user = await this.model.findByPk(id, { transaction });
+
+			if (!user) {
+				throw boom.notFound('User not found');
+			}
+
+			await user.destroy({ transaction });
+			await transaction.commit();
+			return { id };
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	async find() {
@@ -70,7 +115,7 @@ class userService {
 	async findOne(id) {
 		const user = await this.model.findByPk(id);
 		if (!user) {
-			throw boom.notFound('user not found');
+			throw boom.notFound('User not found');
 		}
 		return user;
 	}
