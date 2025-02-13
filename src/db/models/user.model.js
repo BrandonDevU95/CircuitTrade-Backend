@@ -28,7 +28,8 @@ const UserSchema = {
 		type: DataTypes.STRING(100),
 		unique: true,
 		set(value) {
-			this.setDataValue('email', value.toLowerCase().trim());
+			// Se utiliza el método helper 'normalizeEmail' para centralizar la transformación
+			this.setDataValue('email', User.normalizeEmail(value));
 		},
 	},
 	phone: {
@@ -71,12 +72,18 @@ class User extends Model {
 			timestamps: true,
 			hooks: {
 				beforeSave: (user) => {
-					if (user.changed('email')) {
-						user.email = user.email.toLowerCase().trim();
+					if (user.changed('email') && user.email) {
+						// Se utiliza el método helper para normalizar el email
+						user.email = User.normalizeEmail(user.email);
 					}
 					if (user.changed('phone') && user.phone) {
-						user.phone = user.phone.replace(/[^0-9+]/g, '');
+						// Se utiliza el método helper para normalizar el teléfono
+						user.phone = User.normalizePhone(user.phone);
 					}
+					// Considera hashear la contraseña si cambia
+					// if (user.changed('password')) {
+					//     user.password = hashFunction(user.password);
+					// }
 				},
 			},
 			indexes: [
@@ -89,6 +96,16 @@ class User extends Model {
 				},
 			],
 		};
+	}
+
+	// Método helper para centralizar la normalización del email
+	static normalizeEmail(email) {
+		return email.toLowerCase().trim();
+	}
+
+	// Método helper para centralizar la normalización del teléfono
+	static normalizePhone(phone) {
+		return phone.replace(/[^0-9+]/g, '');
 	}
 }
 
