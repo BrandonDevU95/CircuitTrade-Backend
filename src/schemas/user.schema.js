@@ -20,7 +20,6 @@ const updateUserSchema = Joi.object({
 	password: password,
 	email: email,
 	phone: phone,
-	rfc: rfc,
 });
 
 const getUserSchema = Joi.object({
