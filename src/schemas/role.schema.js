@@ -1,8 +1,11 @@
 const Joi = require('joi');
 
 const id = Joi.number().integer();
-const name = Joi.string().min(3).max(100);
-const description = Joi.string().min(3).max(255);
+const name = Joi.string()
+	.min(3)
+	.max(50)
+	.pattern(/^[a-z0-9_]+$/);
+const description = Joi.string().min(3).max(255).trim();
 
 const createRoleSchema = Joi.object({
 	name: name.required(),
