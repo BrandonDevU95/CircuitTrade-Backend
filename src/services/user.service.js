@@ -11,6 +11,7 @@ class userService {
 		//TODO: Implementar transacciones para asegurar que se creen los usuarios y la empresa
 		const { rfc, email, ...userData } = data;
 		const emailLower = email.toLowerCase();
+		const rfcUpper = rfc.toUpperCase();
 
 		const existingUser = await this.model.findOne({
 			where: {
@@ -24,7 +25,7 @@ class userService {
 
 		const company = await models.Company.findOne({
 			where: {
-				rfc: rfc,
+				rfc: rfcUpper,
 			},
 		});
 
