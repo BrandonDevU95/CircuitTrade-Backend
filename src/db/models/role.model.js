@@ -14,11 +14,8 @@ const RoleSchema = {
 		type: DataTypes.STRING,
 		unique: true,
 		set(value) {
-			// Normalización automática
-			this.setDataValue(
-				'name',
-				value.toLowerCase().trim().replace(/\s+/g, '_')
-			);
+			// Se utiliza el método helper normalizeName para centralizar la normalización del nombre.
+			this.setDataValue('name', this.constructor.normalizeName(value));
 		},
 	},
 	description: {
@@ -48,11 +45,9 @@ class Role extends Model {
 			timestamps: true,
 			hooks: {
 				beforeSave: (role) => {
-					if (role.changed('name')) {
-						role.name = role.name
-							.toLowerCase()
-							.trim()
-							.replace(/\s+/g, '_');
+					if (role.changed('name') && role.name) {
+						// Se aplica la normalización a través del método helper en el hook.
+						role.name = Role.normalizeName(role.name);
 					}
 				},
 			},
@@ -66,6 +61,11 @@ class Role extends Model {
 				},
 			],
 		};
+	}
+
+	// Método helper para centralizar la normalización del nombre
+	static normalizeName(name) {
+		return name.toLowerCase().trim().replace(/\s+/g, '_');
 	}
 }
 
