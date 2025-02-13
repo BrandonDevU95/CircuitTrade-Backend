@@ -21,7 +21,7 @@ class RoleService {
 			});
 
 			if (existingRole) {
-				throw boom.badRequest('role already exists');
+				throw boom.badRequest('Role already exists');
 			}
 
 			const newRole = await this.model.create(
@@ -48,7 +48,7 @@ class RoleService {
 			const role = await this.model.findByPk(id, { transaction });
 
 			if (!role) {
-				throw boom.notFound('role not found');
+				throw boom.notFound('Role not found');
 			}
 
 			if (data.name) {
@@ -60,7 +60,7 @@ class RoleService {
 				});
 
 				if (existingRole && existingRole.id !== id) {
-					throw boom.badRequest('role already exists');
+					throw boom.badRequest('Role already exists');
 				}
 			}
 
@@ -87,7 +87,7 @@ class RoleService {
 			const role = await this.model.findByPk(id, { transaction });
 
 			if (!role) {
-				throw boom.notFound('role not found');
+				throw boom.notFound('Role not found');
 			}
 
 			await role.destroy({ transaction });
@@ -108,7 +108,7 @@ class RoleService {
 	async findOne(id) {
 		const role = await this.model.findByPk(id);
 		if (!role) {
-			throw boom.notFound('role not found');
+			throw boom.notFound('Role not found');
 		}
 
 		return role;

@@ -101,7 +101,7 @@ class CompanyService {
 	async findOne(id) {
 		const company = await this.model.findByPk(id);
 		if (!company) {
-			throw boom.notFound('company not found');
+			throw boom.notFound('Company not found');
 		}
 
 		return company;
