@@ -1,4 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
+const { hashPassword } = require('./../../lib/auth.helper');
 
 const USER_TABLE = 'users';
 
@@ -71,7 +72,7 @@ class User extends Model {
 			modelName: 'User',
 			timestamps: true,
 			hooks: {
-				beforeSave: (user) => {
+				beforeSave: async (user) => {
 					if (user.changed('email') && user.email) {
 						// Se utiliza el método helper para normalizar el email
 						user.email = User.normalizeEmail(user.email);
@@ -80,10 +81,9 @@ class User extends Model {
 						// Se utiliza el método helper para normalizar el teléfono
 						user.phone = User.normalizePhone(user.phone);
 					}
-					// Considera hashear la contraseña si cambia
-					// if (user.changed('password')) {
-					//     user.password = hashFunction(user.password);
-					// }
+					if (user.changed('password') && user.password) {
+						user.password = await hashPassword(user.password);
+					}
 				},
 			},
 			indexes: [
