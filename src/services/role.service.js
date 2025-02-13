@@ -1,4 +1,5 @@
 const boom = require('@hapi/boom');
+const sequelize = require('../lib/sequelize');
 
 const { models } = require('./../lib/sequelize');
 
@@ -8,43 +9,95 @@ class RoleService {
 	}
 
 	async create(data) {
+		const transaction = await sequelize.transaction();
 		const nameLower = data.name.toLowerCase();
 
-		const existingRole = await this.model.findOne({
-			where: {
-				name: nameLower,
-			},
-		});
+		try {
+			const existingRole = await this.model.findOne({
+				where: {
+					name: nameLower,
+				},
+				transaction,
+			});
 
-		if (existingRole) {
-			throw boom.badRequest('role already exists');
+			if (existingRole) {
+				throw boom.badRequest('role already exists');
+			}
+
+			const newRole = await this.model.create(
+				{
+					...data,
+					name: nameLower,
+				},
+				{ transaction }
+			);
+
+			await transaction.commit();
+			return newRole;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
 		}
-
-		const newRole = await this.model.create({
-			...data,
-			name: nameLower,
-		});
-		return newRole;
 	}
 
 	async update(id, data) {
-		const role = await this.model.findByPk(id);
-		if (!role) {
-			throw boom.notFound('role not found');
-		}
+		const transaction = await sequelize.transaction();
+		const nameLower = data.name.toLowerCase();
 
-		const updatedRole = await role.update(data);
-		return updatedRole;
+		try {
+			const role = await this.model.findByPk(id, { transaction });
+
+			if (!role) {
+				throw boom.notFound('role not found');
+			}
+
+			if (data.name) {
+				const existingRole = await this.model.findOne({
+					where: {
+						name: nameLower,
+					},
+					transaction,
+				});
+
+				if (existingRole && existingRole.id !== id) {
+					throw boom.badRequest('role already exists');
+				}
+			}
+
+			const updatedRole = await role.update(
+				{
+					...data,
+					name: nameLower,
+				},
+				{ transaction }
+			);
+
+			await transaction.commit();
+			return updatedRole;
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	async delete(id) {
-		const role = await this.model.findByPk(id);
-		if (!role) {
-			throw boom.notFound('role not found');
-		}
+		const transaction = await sequelize.transaction();
 
-		await role.destroy();
-		return { id };
+		try {
+			const role = await this.model.findByPk(id, { transaction });
+
+			if (!role) {
+				throw boom.notFound('role not found');
+			}
+
+			await role.destroy({ transaction });
+
+			await transaction.commit();
+			return { id };
+		} catch (error) {
+			await transaction.rollback();
+			throw error;
+		}
 	}
 
 	async find() {
