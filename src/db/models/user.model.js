@@ -40,6 +40,17 @@ const UserSchema = {
 			is: /^\+?[0-9]{7,15}$/,
 		},
 	},
+	roleId: {
+		allowNull: false,
+		field: 'role_id',
+		type: DataTypes.INTEGER,
+		references: {
+			model: 'roles',
+			key: 'id',
+		},
+		onUpdate: 'CASCADE',
+		onDelete: 'RESTRICT', // No eliminar roles si hay usuarios asociados
+	},
 	companyId: {
 		allowNull: false,
 		field: 'company_id',
@@ -53,16 +64,7 @@ const UserSchema = {
 
 class User extends Model {
 	static associate(models) {
-		this.belongsTo(models.Company, {
-			foreignKey: 'companyId',
-			as: 'company',
-		});
-		this.belongsToMany(models.Role, {
-			through: 'user_roles',
-			foreignKey: 'userId',
-			otherKey: 'roleId',
-			as: 'roles',
-		});
+		this.belongsTo(models.Role, { as: 'role', foreignKey: 'roleId' });
 	}
 
 	static config(sequelize) {
