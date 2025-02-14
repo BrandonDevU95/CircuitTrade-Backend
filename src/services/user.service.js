@@ -132,6 +132,7 @@ class UserService {
 		}
 	}
 
+	//TODO: Quitar el passwoed de la respuesta
 	async find() {
 		const users = await this.model.findAll();
 		return users;
@@ -140,10 +141,6 @@ class UserService {
 	async findOne(id) {
 		const user = await this.model.findByPk(id, {
 			include: [
-				{
-					model: models.Company,
-					as: 'company',
-				},
 				{
 					model: models.Role,
 					as: 'role',
