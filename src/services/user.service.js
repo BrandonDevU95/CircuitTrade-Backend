@@ -88,6 +88,22 @@ class UserService {
 				updateData.email = normalizedEmail;
 			}
 
+			if (updateData.role) {
+				const normalizedRoleName = models.Role.normalizeName(
+					updateData.role
+				);
+				const role = await models.Role.findOne({
+					where: { name: normalizedRoleName },
+					transaction,
+				});
+
+				if (!role) {
+					throw boom.badRequest('Role not found');
+				}
+				updateData.roleId = role.id;
+				delete updateData.role;
+			}
+
 			const updatedUser = await user.update(updateData, { transaction });
 			await transaction.commit();
 			return updatedUser;
