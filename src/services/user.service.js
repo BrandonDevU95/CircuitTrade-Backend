@@ -9,12 +9,13 @@ class UserService {
 
 	async create(data) {
 		const transaction = await sequelize.transaction();
+		const { rfc, email, ...userData } = data;
 
 		try {
-			const { rfc, email, ...userData } = data;
 			// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
 			const normalizedEmail = this.model.normalizeEmail(email);
 			const normalizedRfc = rfc.toUpperCase();
+			const normalizedRoleName = models.Role.normalizeName(userData.role);
 
 			// Prevención de duplicados por email
 			const existingUser = await this.model.findOne({
@@ -33,11 +34,21 @@ class UserService {
 				throw boom.badRequest('Company not found');
 			}
 
+			const role = await models.Role.findOne({
+				where: { name: normalizedRoleName },
+				transaction,
+			});
+
+			if (!role) {
+				throw boom.badRequest('Role not found');
+			}
+
 			const newUser = await this.model.create(
 				{
 					...userData,
 					email: normalizedEmail,
 					companyId: company.id,
+					roleId: role.id,
 				},
 				{ transaction }
 			);
@@ -111,7 +122,18 @@ class UserService {
 	}
 
 	async findOne(id) {
-		const user = await this.model.findByPk(id);
+		const user = await this.model.findByPk(id, {
+			include: [
+				{
+					model: models.Company,
+					as: 'company',
+				},
+				{
+					model: models.Role,
+					as: 'role',
+				},
+			],
+		});
 		if (!user) {
 			throw boom.notFound('User not found');
 		}
