@@ -132,7 +132,6 @@ class UserService {
 		}
 	}
 
-	//TODO: Quitar el passwoed de la respuesta
 	async find() {
 		const users = await this.model.findAll();
 		return users;
@@ -150,6 +149,13 @@ class UserService {
 		if (!user) {
 			throw boom.notFound('User not found');
 		}
+		return user;
+	}
+
+	async findByEmail(email) {
+		const user = await this.model.findOne({
+			where: { email },
+		});
 		return user;
 	}
 }
