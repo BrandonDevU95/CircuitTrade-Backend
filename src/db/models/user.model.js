@@ -60,6 +60,11 @@ const UserSchema = {
 			key: 'id',
 		},
 	},
+	isActive: {
+		allowNull: false,
+		type: DataTypes.BOOLEAN,
+		defaultValue: true,
+	},
 };
 
 class User extends Model {

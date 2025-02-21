@@ -10,6 +10,7 @@ const phone = Joi.string()
 	.pattern(/^\+?[0-9]{7,15}$/);
 const rfc = Joi.string().min(12).max(13);
 const role = Joi.string().min(3).max(30).trim();
+const isActive = Joi.boolean();
 
 const createUserSchema = Joi.object({
 	name: name.required(),
@@ -18,6 +19,7 @@ const createUserSchema = Joi.object({
 	phone: phone,
 	rfc: rfc.required(),
 	role: role.required(),
+	isActive: isActive.required(),
 });
 
 const updateUserSchema = Joi.object({
@@ -26,6 +28,7 @@ const updateUserSchema = Joi.object({
 	email: email,
 	phone: phone,
 	role: role,
+	isActive: isActive,
 });
 
 const getUserSchema = Joi.object({
