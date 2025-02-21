@@ -154,8 +154,10 @@ class UserService {
 	}
 
 	async findByEmail(email) {
+		const normalizedEmail = this.model.normalizeEmail(email);
+
 		const user = await this.model.findOne({
-			where: { email },
+			where: { email: normalizedEmail },
 		});
 
 		return user;
