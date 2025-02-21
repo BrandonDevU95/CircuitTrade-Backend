@@ -1,6 +1,8 @@
 const UserService = require('./user.service');
 const boom = require('@hapi/boom');
 const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
+const { config } = require('../config/config');
 
 const service = new UserService();
 
@@ -20,6 +22,17 @@ class AuthService {
 
 		delete user.dataValues.password;
 		return user;
+	}
+
+	signToken(user) {
+		const payload = {
+			sub: user.id,
+			role: user.role,
+		};
+
+		return jwt.sign(payload, config.jwtSecret, {
+			expiresIn: '15m',
+		});
 	}
 }
 
