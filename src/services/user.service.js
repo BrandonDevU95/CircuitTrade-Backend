@@ -54,6 +54,7 @@ class UserService {
 			);
 
 			await transaction.commit();
+			//Retornar el usuario sin el password
 			return newUser;
 		} catch (error) {
 			await transaction.rollback();
@@ -156,6 +157,7 @@ class UserService {
 		const user = await this.model.findOne({
 			where: { email },
 		});
+
 		return user;
 	}
 }

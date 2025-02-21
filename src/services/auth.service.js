@@ -10,7 +10,7 @@ class AuthService {
 	async getUser(email, password) {
 		const user = await service.findByEmail(email);
 
-		if (!user) {
+		if (!user || !user.isActive) {
 			throw boom.unauthorized('Invalid email or password');
 		}
 
@@ -20,7 +20,6 @@ class AuthService {
 			throw boom.unauthorized('Invalid email or password');
 		}
 
-		delete user.dataValues.password;
 		return user;
 	}
 
