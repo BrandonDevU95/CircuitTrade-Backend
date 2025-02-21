@@ -1,9 +1,8 @@
 const express = require('express');
 const passport = require('passport');
-const AuthService = require('../services/auth.service');
+const JWTManager = require('../utils/jwt');
 
 const router = express.Router();
-const service = new AuthService();
 
 router.post(
 	'/sign-in',
@@ -11,8 +10,9 @@ router.post(
 	async (req, res, next) => {
 		try {
 			const user = req.user;
-			const token = service.signToken(user);
-			res.status(200).json({ token });
+			const { accessToken, refreshToken } =
+				JWTManager.generateTokens(user);
+			res.status(200).json({ user, accessToken, refreshToken });
 		} catch (error) {
 			next(error);
 		}
