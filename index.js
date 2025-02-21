@@ -16,6 +16,8 @@ const app = express();
 app.use(express.json());
 configureCors(app);
 
+require('./src/utils/auth');
+
 app.get('/', (req, res) => {
 	res.send('Hello World');
 });
