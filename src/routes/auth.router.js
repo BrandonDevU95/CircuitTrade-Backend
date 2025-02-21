@@ -12,7 +12,7 @@ router.post(
 		try {
 			const user = req.user;
 			const token = service.signToken(user);
-			res.status(200).json({ user, token });
+			res.status(200).json({ token });
 		} catch (error) {
 			next(error);
 		}
