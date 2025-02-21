@@ -1,4 +1,6 @@
 const { Strategy, ExtractJwt } = require('passport-jwt');
+const { User } = require('../../../db/models/user.model');
+const boom = require('@hapi/boom');
 
 const { config } = require('../../../config/config');
 
@@ -7,14 +9,19 @@ const options = {
 	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
 };
 
-const JWTStrategy = new Strategy(options, async (tokenPayload, cb) => {
+const JWTStrategy = new Strategy(options, async (tokenPayload, done) => {
 	try {
-		if (tokenPayload) {
-			return cb(null, tokenPayload);
+		const user = await User.findByPk(tokenPayload.sub, {
+			attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
+		});
+
+		if (!user || !user.isActive) {
+			return done(boom.unauthorized(), false);
 		}
-		cb(null, false);
+
+		return done(null, { ...user.dataValues });
 	} catch (error) {
-		cb(error);
+		return done(boom.internal('JWT verification error', error));
 	}
 });
 
