@@ -1,8 +1,6 @@
 const UserService = require('./user.service');
 const boom = require('@hapi/boom');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
-const { config } = require('../config/config');
 
 const service = new UserService();
 
@@ -20,7 +18,10 @@ class AuthService {
 			throw boom.unauthorized('Invalid email or password');
 		}
 
-		return user;
+		//El metodo get de un modelo de Sequelize devuelve un
+		// objeto simple de JavaScript sin métodos ni propiedades adicionales de Sequelize.
+		const { password: _, ...sanitizedUser } = user.get({ plain: true });
+		return sanitizedUser;
 	}
 }
 
