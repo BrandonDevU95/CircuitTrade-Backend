@@ -22,17 +22,6 @@ class AuthService {
 
 		return user;
 	}
-
-	signToken(user) {
-		const payload = {
-			sub: user.id,
-			role: user.role,
-		};
-
-		return jwt.sign(payload, config.jwtSecret, {
-			expiresIn: '15m',
-		});
-	}
 }
 
 module.exports = AuthService;
