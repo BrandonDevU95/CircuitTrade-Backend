@@ -3,6 +3,7 @@ const passport = require('passport');
 const AuthService = require('../services/auth.service');
 
 const router = express.Router();
+const service = new AuthService();
 
 router.post(
 	'/sign-in',
@@ -10,7 +11,8 @@ router.post(
 	async (req, res, next) => {
 		try {
 			const user = req.user;
-			res.json(user);
+			const token = service.signToken(user);
+			res.status(200).json({ user, token });
 		} catch (error) {
 			next(error);
 		}
