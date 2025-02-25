@@ -70,6 +70,10 @@ const UserSchema = {
 class User extends Model {
 	static associate(models) {
 		this.belongsTo(models.Role, { as: 'role', foreignKey: 'roleId' });
+		this.hasOne(models.RefreshToken, {
+			as: 'refreshToken',
+			foreignKey: 'userId',
+		});
 	}
 
 	static config(sequelize) {
