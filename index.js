@@ -2,6 +2,7 @@ require('dotenv').config();
 const { config } = require('./src/config/config');
 const routerApi = require('./src/routes');
 const express = require('express');
+const cookieParser = require('cookie-parser');
 const configureCors = require('./src/middlewares/cors');
 const {
 	logErrors,
@@ -15,6 +16,7 @@ const app = express();
 
 app.use(express.json());
 configureCors(app);
+app.use(cookieParser());
 
 require('./src/auth');
 
