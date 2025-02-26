@@ -8,14 +8,15 @@ class refreshTokenService {
 		this.model = models.RefreshToken;
 	}
 
-	async upsertRefreshToken(userId, tokenData) {
+	async upsertRefreshToken(userId, token) {
 		const transaction = await sequelize.transaction();
 
 		try {
 			const refreshToken = await this.model.upsert(
 				{
 					userId,
-					...tokenData,
+					token,
+					expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
 				},
 				{ returning: true, conflictFields: ['userId'], transaction } // Actualiza si ya existe
 			);
@@ -32,7 +33,8 @@ class refreshTokenService {
 			where: { userId },
 			include: {
 				model: models.User,
-				attributes: ['id', 'email'],
+				as: 'user',
+				attributes: ['id', 'role_id'],
 			},
 		});
 
