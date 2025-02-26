@@ -5,7 +5,6 @@ const validatorHandler = require('../middlewares/validator.handler');
 const { signInSchema } = require('../schemas/auth.schema');
 const RefreshTokenService = require('../services/refreshToken.service');
 const boom = require('@hapi/boom');
-const userAuth = require('../middlewares/auth.handler');
 const { config } = require('../config/config');
 
 const service = new RefreshTokenService();

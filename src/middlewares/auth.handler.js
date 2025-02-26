@@ -32,6 +32,7 @@ async function userAuth(req, res, next) {
 
 		if (isRefreshTokenExpired) {
 			res.clearCookie(ACCESS_TOKEN);
+			await service.deleteToken(refreshToken.user.id);
 			next(boom.unauthorized('Refresh token has expired'));
 			return;
 		}
