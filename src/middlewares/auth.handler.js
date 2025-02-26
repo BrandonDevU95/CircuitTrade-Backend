@@ -1,32 +1,55 @@
+const JWTManager = require('../utils/jwt');
 const boom = require('@hapi/boom');
-const { config } = require('dotenv');
+const RefreshTokenService = require('../services/refreshToken.service');
 
-function checkApiKey(req, res, next) {
-	const apiKey = req.headers['api'];
-	if (apiKey === config.apiKey) {
-		next();
-	} else {
-		next(boom.unauthorized('Invalid API Key'));
-	}
-}
+const service = new RefreshTokenService();
 
-function checkAdminRole(req, res, next) {
-	const user = req.user;
-	if (user.role === 'admin') {
-		next();
-	} else {
-		next(boom.unauthorized('Invalid Role'));
-	}
-}
+const ACCESS_TOKEN = 'access_token';
 
-function checkRoles(...roles) {
-	return (req, res, next) => {
-		if (!roles.includes(req.user.role)) {
-			next(boom.unauthorized('Invalid Role'));
-		} else {
-			next();
+async function userAuth(req, res, next) {
+	try {
+		const accessToken = req.cookies[ACCESS_TOKEN];
+
+		// 1. Verificar si hay Access Token
+		if (!accessToken) {
+			next(boom.unauthorized('Access token is required'));
+			return;
 		}
-	};
+
+		// 2. Verificar si el Access Token ha expirado
+		const isAccessTokenExpired = JWTManager.isExpired(accessToken);
+
+		if (!isAccessTokenExpired) {
+			const payload = JWTManager.verifyAccessToken(accessToken);
+			req.user = payload;
+			return next();
+		}
+
+		// 3. Verificar si hay Refresh Token desde la DB
+		const accessPayload = JWTManager.decodeToken(accessToken);
+		const refreshToken = await service.getTokensByUserId(accessPayload.sub);
+		const isRefreshTokenExpired = JWTManager.isExpired(refreshToken.token);
+
+		if (isRefreshTokenExpired) {
+			res.clearCookie(ACCESS_TOKEN);
+			next(boom.unauthorized('Refresh token has expired'));
+			return;
+		}
+
+		// 4. Generar nuevo Access Token
+		const newAccessToken = JWTManager.generateAccessToken({
+			id: refreshToken.user.id,
+			role: refreshToken.user.role_id,
+		});
+
+		res.cookie(ACCESS_TOKEN, newAccessToken, { httpOnly: true });
+		req.cookies[ACCESS_TOKEN] = newAccessToken; // Actualizar el objeto cookies
+
+		req.user = JWTManager.decodeToken(newAccessToken);
+		next();
+	} catch (error) {
+		next(boom.unauthorized('Invalid access token'));
+	}
 }
 
-module.exports = { checkApiKey, checkAdminRole, checkRoles };
+module.exports = userAuth;
