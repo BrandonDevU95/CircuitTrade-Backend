@@ -17,6 +17,7 @@ const RefreshTokenSchema = {
 	userId: {
 		allowNull: false,
 		type: DataTypes.INTEGER,
+		unique: true,
 	},
 	expiresAt: {
 		allowNull: false,
@@ -51,6 +52,10 @@ class RefreshToken extends Model {
 				{
 					unique: true,
 					fields: ['token'],
+				},
+				{
+					unique: true,
+					fields: ['userId'],
 				},
 				{
 					fields: ['expiresAt'],
