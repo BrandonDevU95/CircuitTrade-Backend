@@ -6,12 +6,19 @@ const { config } = require('../../config/config');
 
 const options = {
 	secretOrKey: config.jwtSecret,
-	jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
+	jwtFromRequest: ExtractJwt.fromExtractors([
+		(req) => req.cookies.access_token,
+	]),
+	passReqToCallback: true, // Agregado para que se pase req al callback
 };
 
-const JWTStrategy = new Strategy(options, async (tokenPayload, done) => {
+const JWTStrategy = new Strategy(options, async (req, payload, done) => {
 	try {
-		const user = await User.findByPk(tokenPayload.sub, {
+		if (!req.user || payload.sub !== req.user.sub) {
+			return done(boom.unauthorized(), false);
+		}
+
+		const user = await User.findByPk(payload.sub, {
 			attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
 		});
 
@@ -21,7 +28,7 @@ const JWTStrategy = new Strategy(options, async (tokenPayload, done) => {
 
 		return done(null, { ...user.dataValues });
 	} catch (error) {
-		return done(boom.internal('JWT verification error', error));
+		return done(error, false);
 	}
 });
 
