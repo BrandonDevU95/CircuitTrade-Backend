@@ -69,6 +69,10 @@ const UserSchema = {
 
 class User extends Model {
 	static associate(models) {
+		this.belongsTo(models.Company, {
+			as: 'company',
+			foreignKey: 'companyId',
+		});
 		this.belongsTo(models.Role, { as: 'role', foreignKey: 'roleId' });
 		this.hasOne(models.RefreshToken, {
 			as: 'refreshToken',
