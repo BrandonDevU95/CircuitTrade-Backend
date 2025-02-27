@@ -54,8 +54,8 @@ class UserService {
 			);
 
 			await transaction.commit();
-			//Retornar el usuario sin el password
-			return newUser;
+			const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
+			return userWithoutPassword;
 		} catch (error) {
 			await transaction.rollback();
 			throw error;
