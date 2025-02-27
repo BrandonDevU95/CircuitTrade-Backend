@@ -4,7 +4,7 @@ const { config } = require('../config/config');
 class JWTManager {
 	static generateAccessToken(user) {
 		return jwt.sign({ sub: user.id, role: user.role }, config.jwtSecret, {
-			expiresIn: '1m',
+			expiresIn: '15m',
 		});
 	}
 
@@ -27,9 +27,12 @@ class JWTManager {
 	}
 
 	static isExpired(token) {
-		const { exp } = jwt.decode(token);
+		const decode = jwt.decode(token);
+		if (!decode || !decode.exp) {
+			return true;
+		}
 		const currentTime = Date.now() / 1000;
-		return currentTime > exp;
+		return currentTime > decode.exp;
 	}
 }
 
