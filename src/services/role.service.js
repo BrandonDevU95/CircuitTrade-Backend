@@ -29,6 +29,10 @@ class RoleService {
 				{ transaction }
 			);
 
+			if (!newRole) {
+				throw boom.badImplementation('Error creating role');
+			}
+
 			await transaction.commit();
 			return newRole;
 		} catch (error) {
@@ -62,6 +66,11 @@ class RoleService {
 			}
 
 			const updatedRole = await role.update(updateData, { transaction });
+
+			if (!updatedRole) {
+				throw boom.badImplementation('Error updating role');
+			}
+
 			await transaction.commit();
 			return updatedRole;
 		} catch (error) {
@@ -92,11 +101,15 @@ class RoleService {
 	}
 
 	async findOne(id) {
-		const role = await this.model.findByPk(id);
-		if (!role) {
-			throw boom.notFound('Role not found');
+		try {
+			const role = await this.model.findByPk(id);
+			if (!role) {
+				throw boom.notFound('Role not found');
+			}
+			return role;
+		} catch (error) {
+			throw error;
 		}
-		return role;
 	}
 }
 

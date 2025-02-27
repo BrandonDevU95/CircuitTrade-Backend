@@ -53,6 +53,10 @@ class UserService {
 				{ transaction }
 			);
 
+			if (!newUser) {
+				throw boom.badImplementation('Error creating user');
+			}
+
 			await transaction.commit();
 			const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
 			return userWithoutPassword;
@@ -106,6 +110,11 @@ class UserService {
 			}
 
 			const updatedUser = await user.update(updateData, { transaction });
+
+			if (!updatedUser) {
+				throw boom.badImplementation('Error updating user');
+			}
+
 			await transaction.commit();
 			return updatedUser;
 		} catch (error) {
@@ -139,28 +148,40 @@ class UserService {
 	}
 
 	async findOne(id) {
-		const user = await this.model.findByPk(id, {
-			include: [
-				{
-					model: models.Role,
-					as: 'role',
-				},
-			],
-		});
-		if (!user) {
-			throw boom.notFound('User not found');
+		try {
+			const user = await this.model.findByPk(id, {
+				include: [
+					{
+						model: models.Role,
+						as: 'role',
+					},
+				],
+			});
+			if (!user) {
+				throw boom.notFound('User not found');
+			}
+			return user;
+		} catch (error) {
+			throw error;
 		}
-		return user;
 	}
 
 	async findByEmail(email) {
-		const normalizedEmail = this.model.normalizeEmail(email);
+		try {
+			const normalizedEmail = this.model.normalizeEmail(email);
 
-		const user = await this.model.findOne({
-			where: { email: normalizedEmail },
-		});
+			const user = await this.model.findOne({
+				where: { email: normalizedEmail },
+			});
 
-		return user;
+			if (!user) {
+				throw boom.notFound('User not found');
+			}
+
+			return user;
+		} catch (error) {
+			throw error;
+		}
 	}
 }
 

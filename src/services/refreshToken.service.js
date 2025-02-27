@@ -20,6 +20,11 @@ class refreshTokenService {
 				},
 				{ returning: true, conflictFields: ['userId'], transaction } // Actualiza si ya existe
 			);
+
+			if (!refreshToken) {
+				throw boom.badImplementation('Error creating refresh token');
+			}
+
 			await transaction.commit();
 			return refreshToken;
 		} catch (error) {

@@ -50,6 +50,10 @@ class AuthService {
 
 			return { user, accessToken };
 		} catch (error) {
+			if (boom.isBoom(error)) {
+				throw error;
+			}
+
 			throw boom.badImplementation('Error creating user');
 		}
 	}
