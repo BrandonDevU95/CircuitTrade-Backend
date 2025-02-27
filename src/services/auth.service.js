@@ -19,6 +19,7 @@ class AuthService {
 			throw boom.unauthorized('Invalid email or password');
 		}
 
+		//Centralizar la logica de comparacion de contraseñas
 		const isMatch = await bcrypt.compare(password, user.password);
 
 		if (!isMatch) {
@@ -49,7 +50,7 @@ class AuthService {
 
 			return { user, accessToken };
 		} catch (error) {
-			boom.boomify(error);
+			throw boom.badImplementation('Error creating user');
 		}
 	}
 }
