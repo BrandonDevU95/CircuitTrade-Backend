@@ -53,6 +53,10 @@ class AuthService {
 			const accessToken = JWTManager.generateAccessToken(user);
 			const refreshToken = JWTManager.generateRefreshToken(user);
 
+			if (!accessToken || !refreshToken) {
+				throw boom.badImplementation('Error generating tokens');
+			}
+
 			await this.refreshTokenService.upsertRefreshToken(
 				user.id,
 				refreshToken,

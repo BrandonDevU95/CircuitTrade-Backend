@@ -21,18 +21,19 @@ router.post(
 		const transaction = await sequelize.transaction();
 		try {
 			const user = req.user;
+
 			const accessToken = JWTManager.generateAccessToken(user);
 			const refreshToken = JWTManager.generateRefreshToken(user);
 
-			const refreshTokenDB = await refreshTokenService.upsertRefreshToken(
+			if (!accessToken || !refreshToken) {
+				throw boom.badImplementation('Error generating tokens');
+			}
+
+			await refreshTokenService.upsertRefreshToken(
 				user.id,
 				refreshToken,
 				transaction
 			);
-
-			if (!refreshTokenDB) {
-				throw boom.badImplementation('Error creating refresh token');
-			}
 
 			res.cookie('access_token', accessToken, {
 				httpOnly: true,
