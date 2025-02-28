@@ -116,6 +116,17 @@ class CompanyService {
 				throw boom.notFound('Company not found');
 			}
 
+			const users = await models.User.findAll({
+				where: { companyId: id },
+				transaction,
+			});
+
+			if (users.length > 0) {
+				throw boom.badRequest(
+					'Cannot delete company with associated users'
+				);
+			}
+
 			await company.destroy({ transaction });
 
 			await transaction.commit();

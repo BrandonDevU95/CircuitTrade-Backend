@@ -56,6 +56,8 @@ class Company extends Model {
 		this.hasMany(models.User, {
 			foreignKey: 'companyId',
 			as: 'users',
+			onDelete: 'RESTRICT',
+			onUpdate: 'CASCADE',
 		});
 	}
 
