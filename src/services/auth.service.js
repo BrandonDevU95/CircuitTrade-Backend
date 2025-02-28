@@ -3,7 +3,7 @@ const CompanyService = require('./company.service');
 const RefreshTokenService = require('./refreshToken.service');
 const JWTManager = require('../utils/jwt');
 const boom = require('@hapi/boom');
-const bcrypt = require('bcrypt');
+const { verifyPassword } = require('../utils/auth.utils');
 
 class AuthService {
 	constructor() {
@@ -20,7 +20,7 @@ class AuthService {
 		}
 
 		//Centralizar la logica de comparacion de contraseñas
-		const isMatch = await bcrypt.compare(password, user.password);
+		const isMatch = await verifyPassword(password, user.password);
 
 		if (!isMatch) {
 			throw boom.unauthorized('Invalid email or password');
@@ -34,12 +34,25 @@ class AuthService {
 
 	async signUp(companyData, userData) {
 		try {
+			console.log(
+				'------------------- INICIO DE REGISTRO -------------------'
+			);
 			const company = await this.companyService.create(companyData);
+			console.log(
+				'------------------- EMPRESA CREADA -------------------'
+			);
+			console.log(company);
 			// Crear usuario vinculado a la empresa (usando el RFC de la empresa)
+			console.log(
+				'------------------- CREANDO USUARIO -------------------'
+			);
 			const user = await this.userService.create(
 				{ ...userData, rfc: company.rfc } // Envía el RFC de la empresa
 			);
-
+			console.log(
+				'------------------- USUARIO CREADO -------------------'
+			);
+			console.log(user);
 			const accessToken = JWTManager.generateAccessToken(user);
 			const refreshToken = JWTManager.generateRefreshToken(user);
 

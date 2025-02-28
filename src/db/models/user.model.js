@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const { hashPassword } = require('./../../lib/auth.helper');
+const { encryptPassword } = require('./../../utils/auth.utils');
 
 const USER_TABLE = 'users';
 
@@ -97,7 +97,7 @@ class User extends Model {
 						user.phone = User.normalizePhone(user.phone);
 					}
 					if (user.changed('password') && user.password) {
-						user.password = await hashPassword(user.password);
+						user.password = await encryptPassword(user.password);
 					}
 				},
 			},
