@@ -45,6 +45,7 @@ class RoleService {
 		const transaction = await sequelize.transaction();
 		try {
 			const role = await this.model.findByPk(id, { transaction });
+
 			if (!role) {
 				throw boom.notFound('Role not found');
 			}
@@ -86,9 +87,15 @@ class RoleService {
 			if (!role) {
 				throw boom.notFound('Role not found');
 			}
-			await role.destroy({ transaction });
+
+			const deletedRole = await role.destroy({ transaction });
+
+			if (!deletedRole) {
+				throw boom.badImplementation('Error deleting role');
+			}
+
 			await transaction.commit();
-			return { id };
+			return { id: deletedRole.id };
 		} catch (error) {
 			await transaction.rollback();
 			throw error;
@@ -96,13 +103,22 @@ class RoleService {
 	}
 
 	async find() {
-		const roles = await this.model.findAll();
-		return roles;
+		try {
+			const roles = await this.model.findAll();
+
+			if (!roles) {
+				throw boom.notFound('Roles not found');
+			}
+			return roles;
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	async findOne(id) {
 		try {
 			const role = await this.model.findByPk(id);
+
 			if (!role) {
 				throw boom.notFound('Role not found');
 			}
