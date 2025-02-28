@@ -1,4 +1,6 @@
-const { ValidationError } = require('sequelize');
+const { ValidationError, UniqueConstraintError } = require('sequelize');
+
+const { config } = require('../config/config');
 
 function logErrors(err, req, res, next) {
 	console.error(err);
@@ -6,10 +8,16 @@ function logErrors(err, req, res, next) {
 }
 
 function errorHandler(err, req, res, next) {
-	res.status(500).json({
+	const response = {
 		message: err.message,
-		stack: err.stack,
-	});
+	};
+
+	// Solo incluir el stack en desarrollo
+	if (config.env === 'development') {
+		response.stack = err.stack;
+	}
+
+	res.status(500).json(response);
 }
 
 function boomErrorHandler(err, req, res, next) {
@@ -23,13 +31,26 @@ function boomErrorHandler(err, req, res, next) {
 
 function ormErrorHandler(err, req, res, next) {
 	if (err instanceof ValidationError) {
+		res.status(400).json({
+			statusCode: 400,
+			message: 'Validation error',
+			errors: err.errors.map((e) => ({
+				field: e.path,
+				message: e.message,
+			})),
+		});
+	} else if (err instanceof UniqueConstraintError) {
 		res.status(409).json({
 			statusCode: 409,
-			message: err.name,
-			errors: err.errors,
+			message: 'Duplicate entry',
+			errors: err.errors.map((e) => ({
+				field: e.path,
+				message: e.message,
+			})),
 		});
+	} else {
+		next(err);
 	}
-	next(err);
 }
 
 module.exports = { logErrors, errorHandler, boomErrorHandler, ormErrorHandler };
