@@ -48,7 +48,7 @@ const UserSchema = {
 			model: 'roles',
 			key: 'id',
 		},
-		onUpdate: 'CASCADE',
+		onUpdate: 'CASCADE', // Si se actualiza el rol, se actualiza en cascada
 		onDelete: 'RESTRICT', // No eliminar roles si hay usuarios asociados
 	},
 	companyId: {
@@ -58,6 +58,8 @@ const UserSchema = {
 		references: {
 			model: 'companies',
 			key: 'id',
+			onUpdate: 'CASCADE', // Si se actualiza la empresa, se actualiza en cascada
+			onDelete: 'RESTRICT', // No eliminar empresas si hay usuarios asociados
 		},
 	},
 	isActive: {
