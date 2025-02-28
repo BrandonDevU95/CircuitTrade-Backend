@@ -8,8 +8,7 @@ class CompanyService {
 		this.model = models.Company;
 	}
 
-	async create(data) {
-		const transaction = await sequelize.transaction();
+	async create(data, transaction) {
 		try {
 			// Se usa la función helper para normalizar los campos
 			const normalizedRfc = this.model.normalizeRfc(data.rfc);
@@ -43,10 +42,8 @@ class CompanyService {
 				transaction,
 			});
 
-			await transaction.commit();
 			return newCompany;
 		} catch (error) {
-			await transaction.rollback();
 			throw error;
 		}
 	}

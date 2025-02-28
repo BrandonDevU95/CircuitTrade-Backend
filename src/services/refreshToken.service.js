@@ -8,9 +8,7 @@ class refreshTokenService {
 		this.model = models.RefreshToken;
 	}
 
-	async upsertRefreshToken(userId, token) {
-		const transaction = await sequelize.transaction();
-
+	async upsertRefreshToken(userId, token, transaction) {
 		try {
 			const refreshToken = await this.model.upsert(
 				{
@@ -25,10 +23,8 @@ class refreshTokenService {
 				throw boom.badImplementation('Error creating refresh token');
 			}
 
-			await transaction.commit();
 			return refreshToken;
 		} catch (error) {
-			await transaction.rollback();
 			throw error;
 		}
 	}

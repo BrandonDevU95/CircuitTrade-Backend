@@ -4,8 +4,7 @@ const RefreshTokenService = require('./refreshToken.service');
 const JWTManager = require('../utils/jwt.utils');
 const boom = require('@hapi/boom');
 const { verifyPassword } = require('../utils/auth.utils');
-const e = require('express');
-
+const sequelize = require('../lib/sequelize');
 class AuthService {
 	constructor() {
 		this.userService = new UserService();
@@ -34,12 +33,17 @@ class AuthService {
 	}
 
 	async signUp(companyData, userData) {
+		const transaction = await sequelize.transaction();
 		try {
-			const company = await this.companyService.create(companyData);
+			const company = await this.companyService.create(
+				companyData,
+				transaction
+			);
 
 			// Crear usuario vinculado a la empresa (usando el RFC de la empresa)
 			const user = await this.userService.create(
-				{ ...userData, rfc: company.rfc } // Envía el RFC de la empresa
+				{ ...userData, rfc: company.rfc }, // Envía el RFC de la empresa
+				transaction
 			);
 
 			const accessToken = JWTManager.generateAccessToken(user);
@@ -47,11 +51,15 @@ class AuthService {
 
 			await this.refreshTokenService.upsertRefreshToken(
 				user.id,
-				refreshToken
+				refreshToken,
+				transaction
 			);
 
+			await transaction.commit();
 			return { user, accessToken };
 		} catch (error) {
+			await transaction.rollback();
+
 			if (boom.isBoom(error)) {
 				throw error;
 			}

@@ -7,8 +7,7 @@ class UserService {
 		this.model = models.User;
 	}
 
-	async create(data) {
-		const transaction = await sequelize.transaction();
+	async create(data, transaction) {
 		const { rfc, email, ...userData } = data;
 
 		try {
@@ -57,11 +56,9 @@ class UserService {
 				throw boom.badImplementation('Error creating user');
 			}
 
-			await transaction.commit();
 			const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
 			return userWithoutPassword;
 		} catch (error) {
-			await transaction.rollback();
 			throw error;
 		}
 	}
