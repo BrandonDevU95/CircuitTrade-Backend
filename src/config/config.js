@@ -11,6 +11,7 @@ const config = {
 	apiKey: process.env.API_KEY,
 	jwtSecret: process.env.JWT_SECRET,
 	jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
+	bcryptSaltRounds: process.env.BCRYPT_SALT,
 };
 
 module.exports = { config };
