@@ -13,23 +13,27 @@ class AuthService {
 	}
 
 	async getUser(email, password) {
-		const user = await this.userService.findByEmail(email);
+		try {
+			const user = await this.userService.findByEmail(email);
 
-		if (!user || !user.isActive) {
-			throw boom.unauthorized('Invalid email or password');
+			if (!user.isActive) {
+				throw boom.unauthorized('User is not active');
+			}
+
+			//Centralizar la logica de comparacion de contraseñas
+			const isMatch = await verifyPassword(password, user.password);
+
+			if (!isMatch) {
+				throw boom.unauthorized('Invalid email or password');
+			}
+
+			//El metodo get de un modelo de Sequelize devuelve un
+			// objeto simple de JavaScript sin métodos ni propiedades adicionales de Sequelize.
+			const { password: _, ...sanitizedUser } = user.get({ plain: true });
+			return sanitizedUser;
+		} catch (error) {
+			throw error;
 		}
-
-		//Centralizar la logica de comparacion de contraseñas
-		const isMatch = await verifyPassword(password, user.password);
-
-		if (!isMatch) {
-			throw boom.unauthorized('Invalid email or password');
-		}
-
-		//El metodo get de un modelo de Sequelize devuelve un
-		// objeto simple de JavaScript sin métodos ni propiedades adicionales de Sequelize.
-		const { password: _, ...sanitizedUser } = user.get({ plain: true });
-		return sanitizedUser;
 	}
 
 	async signUp(companyData, userData) {
