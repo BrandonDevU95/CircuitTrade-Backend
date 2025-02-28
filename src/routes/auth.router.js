@@ -1,6 +1,6 @@
 const express = require('express');
 const passport = require('passport');
-const JWTManager = require('../utils/jwt');
+const JWTManager = require('../utils/jwt.utils');
 const validatorHandler = require('../middlewares/validator.handler');
 const { signInSchema, signUpSchema } = require('../schemas/auth.schema');
 const RefreshTokenService = require('../services/refreshToken.service');
