@@ -6,6 +6,7 @@ const { signInSchema, signUpSchema } = require('../schemas/auth.schema');
 const RefreshTokenService = require('../services/refreshToken.service');
 const AuthService = require('../services/auth.service');
 const boom = require('@hapi/boom');
+const sequelize = require('../lib/sequelize');
 const { config } = require('../config/config');
 
 const refreshTokenService = new RefreshTokenService();
@@ -17,6 +18,7 @@ router.post(
 	validatorHandler(signInSchema, 'body'),
 	passport.authenticate('local', { session: false }),
 	async (req, res, next) => {
+		const transaction = await sequelize.transaction();
 		try {
 			const user = req.user;
 			const accessToken = JWTManager.generateAccessToken(user);
@@ -24,7 +26,8 @@ router.post(
 
 			const refreshTokenDB = await refreshTokenService.upsertRefreshToken(
 				user.id,
-				refreshToken
+				refreshToken,
+				transaction
 			);
 
 			if (!refreshTokenDB) {
@@ -38,8 +41,10 @@ router.post(
 				maxAge: 1000 * 60 * 15, // 15 minutes
 			});
 
+			await transaction.commit();
 			res.status(200).json({ user });
 		} catch (error) {
+			await transaction.rollback();
 			next(error);
 		}
 	}

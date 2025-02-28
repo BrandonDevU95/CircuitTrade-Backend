@@ -1,5 +1,5 @@
 const express = require('express');
-
+const sequelize = require('../lib/sequelize');
 const CompanyService = require('../services/company.service');
 const validatorHandler = require('../middlewares/validator.handler');
 const {
@@ -38,11 +38,19 @@ router.post(
 	'/',
 	validatorHandler(createCompanySchema, 'body'),
 	async (req, res, next) => {
+		const transaction = await sequelize.transaction();
 		try {
 			const body = req.body;
-			const newCompany = await service.create(body);
+			const newCompany = await service.create(body, transaction);
+
+			if (!newCompany) {
+				throw new Error('Company was not created');
+			}
+
+			await transaction.commit();
 			res.status(201).json(newCompany);
 		} catch (error) {
+			await transaction.rollback();
 			next(error);
 		}
 	}
