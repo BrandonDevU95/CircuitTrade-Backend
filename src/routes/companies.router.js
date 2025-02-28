@@ -43,10 +43,6 @@ router.post(
 			const body = req.body;
 			const newCompany = await service.create(body, transaction);
 
-			if (!newCompany) {
-				throw new Error('Company was not created');
-			}
-
 			await transaction.commit();
 			res.status(201).json(newCompany);
 		} catch (error) {

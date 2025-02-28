@@ -42,6 +42,10 @@ class CompanyService {
 				transaction,
 			});
 
+			if (!newCompany) {
+				throw boom.badImplementation('Error creating company');
+			}
+
 			return newCompany;
 		} catch (error) {
 			throw error;
@@ -99,6 +103,10 @@ class CompanyService {
 				transaction,
 			});
 
+			if (!updatedCompany) {
+				throw boom.badImplementation('Error updating company');
+			}
+
 			await transaction.commit();
 			return updatedCompany;
 		} catch (error) {
@@ -127,10 +135,14 @@ class CompanyService {
 				);
 			}
 
-			await company.destroy({ transaction });
+			const deletedCompany = await company.destroy({ transaction });
+
+			if (!deletedCompany) {
+				throw boom.badImplementation('Error deleting company');
+			}
 
 			await transaction.commit();
-			return { id };
+			return { id: deletedCompany.id };
 		} catch (error) {
 			await transaction.rollback();
 			throw error;
@@ -138,8 +150,17 @@ class CompanyService {
 	}
 
 	async find() {
-		const companies = await this.model.findAll();
-		return companies;
+		try {
+			const companies = await this.model.findAll();
+
+			if (!companies) {
+				throw boom.notFound('Companies not found');
+			}
+
+			return companies;
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	async findOne(id) {
