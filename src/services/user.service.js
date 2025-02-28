@@ -130,9 +130,14 @@ class UserService {
 				throw boom.notFound('User not found');
 			}
 
-			await user.destroy({ transaction });
+			const deletedUser = await user.destroy({ transaction });
+
+			if (!deletedUser) {
+				throw boom.badImplementation('Error deleting user');
+			}
+
 			await transaction.commit();
-			return { id };
+			return { id: deletedUser.id };
 		} catch (error) {
 			await transaction.rollback();
 			throw error;
@@ -140,8 +145,16 @@ class UserService {
 	}
 
 	async find() {
-		const users = await this.model.findAll();
-		return users;
+		try {
+			const users = await this.model.findAll();
+
+			if (!users) {
+				throw boom.notFound('Users not found');
+			}
+			return users;
+		} catch (error) {
+			throw error;
+		}
 	}
 
 	async findOne(id) {
