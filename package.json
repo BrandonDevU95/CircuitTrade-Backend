@@ -8,6 +8,7 @@
 		"start": "node index.js",
 		"lint": "eslint",
 		"format": "prettier --write .",
+		"seed": "npx sequelize-cli db:seed:all",
 		"db:migrate": "sequelize db:migrate",
 		"db:seed": "sequelize db:seed:all",
 		"db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
@@ -26,6 +27,7 @@
 	"author": "BrandonDevU95",
 	"license": "MIT",
 	"devDependencies": {
+		"@faker-js/faker": "^9.5.0",
 		"eslint": "9.7.0",
 		"eslint-config-prettier": "9.1.0",
 		"eslint-plugin-prettier": "5.2.1",
