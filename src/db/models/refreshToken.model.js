@@ -18,6 +18,8 @@ const RefreshTokenSchema = {
 		allowNull: false,
 		type: DataTypes.INTEGER,
 		unique: true,
+		onUpdate: 'CASCADE', // Si se actualiza el usuario, se actualiza en cascada
+		onDelete: 'CASCADE', // Si se elimina el usuario, se eliminan los tokens asociados
 	},
 	expiresAt: {
 		allowNull: false,
@@ -31,7 +33,6 @@ class RefreshToken extends Model {
 			foreignKey: 'userId',
 			as: 'user',
 			allowNull: false,
-			onDelete: 'CASCADE',
 		});
 	}
 
