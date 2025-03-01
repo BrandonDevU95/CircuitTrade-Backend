@@ -10,9 +10,10 @@
 		"lint:fix": "eslint . --fix",
 		"format": "prettier --write .",
 		"seed": "npx sequelize-cli db:seed:all",
+		"db:setup": "sequelize db:create && sequelize db:migrate && sequelize db:seed:all",
+		"db:reset": "sequelize db:drop && npm run db:setup",
 		"db:migrate": "sequelize db:migrate",
 		"db:seed": "sequelize db:seed:all",
-		"db:reset": "sequelize db:migrate:undo:all && sequelize db:migrate && sequelize db:seed:all",
 		"test": "jest"
 	},
 	"keywords": [
