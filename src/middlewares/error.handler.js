@@ -3,11 +3,12 @@ const { ValidationError, UniqueConstraintError } = require('sequelize');
 const { config } = require('../config/config');
 
 function logErrors(err, req, res, next) {
+	// eslint-disable-next-line no-console
 	console.error(err);
 	next(err);
 }
 
-function errorHandler(err, req, res, next) {
+function errorHandler(err, req, res) {
 	const response = {
 		message: err.message,
 	};

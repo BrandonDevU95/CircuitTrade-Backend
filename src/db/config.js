@@ -8,11 +8,13 @@ module.exports = {
 	development: {
 		url: URI,
 		dialect: 'mysql',
+		// eslint-disable-next-line no-console
 		logging: console.log,
 	},
 	production: {
 		url: URI,
 		dialect: 'mysql',
+		// eslint-disable-next-line no-console
 		logging: (...msg) => console.log(msg),
 	},
 };

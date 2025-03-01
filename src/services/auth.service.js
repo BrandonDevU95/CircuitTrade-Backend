@@ -13,36 +13,30 @@ class AuthService {
 	}
 
 	async getUser(email, password) {
-		try {
-			const user = await this.userService.findByEmail(email);
+		const user = await this.userService.findByEmail(email);
 
-			if (!user.isActive) {
-				throw boom.unauthorized('User is not active');
-			}
-
-			//Centralizar la logica de comparacion de contraseñas
-			const isMatch = await verifyPassword(password, user.password);
-
-			if (!isMatch) {
-				throw boom.unauthorized('Invalid email or password');
-			}
-
-			//El metodo get de un modelo de Sequelize devuelve un
-			// objeto simple de JavaScript sin métodos ni propiedades adicionales de Sequelize.
-			const { password: _, ...sanitizedUser } = user.get({ plain: true });
-			return sanitizedUser;
-		} catch (error) {
-			throw error;
+		if (!user.isActive) {
+			throw boom.unauthorized('User is not active');
 		}
+
+		//Centralizar la logica de comparacion de contraseñas
+		const isMatch = await verifyPassword(password, user.password);
+
+		if (!isMatch) {
+			throw boom.unauthorized('Invalid email or password');
+		}
+
+		//El metodo get de un modelo de Sequelize devuelve un
+		// objeto simple de JavaScript sin métodos ni propiedades adicionales de Sequelize.
+		// eslint-disable-next-line no-unused-vars
+		const { password: _, ...sanitizedUser } = user.get({ plain: true });
+		return sanitizedUser;
 	}
 
 	async signUp(companyData, userData) {
 		const transaction = await sequelize.transaction();
 		try {
-			const company = await this.companyService.create(
-				companyData,
-				transaction
-			);
+			const company = await this.companyService.create(companyData, transaction);
 
 			// Crear usuario vinculado a la empresa (usando el RFC de la empresa)
 			const user = await this.userService.create(
@@ -57,11 +51,7 @@ class AuthService {
 				throw boom.badImplementation('Error generating tokens');
 			}
 
-			await this.refreshTokenService.upsertRefreshToken(
-				user.id,
-				refreshToken,
-				transaction
-			);
+			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, transaction);
 
 			await transaction.commit();
 			return { user, accessToken };

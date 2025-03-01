@@ -1,5 +1,4 @@
 'use strict';
-const { v4: uuidv4 } = require('uuid');
 const faker = require('@faker-js/faker').fakerES_MX;
 
 // Helper para generar RFCs mexicanos válidos
@@ -19,7 +18,7 @@ const generateMexicanRFC = () => {
 
 /** @type {import('sequelize-cli').Migration} */
 module.exports = {
-	async up(queryInterface, Sequelize) {
+	async up(queryInterface) {
 		const companies = Array.from({ length: 10 }, (_, i) => ({
 			name: `${faker.company.name()}`,
 			rfc: generateMexicanRFC(),
@@ -46,7 +45,7 @@ module.exports = {
 		await queryInterface.bulkInsert('companies', companies, {});
 	},
 
-	async down(queryInterface, Sequelize) {
+	async down(queryInterface) {
 		await queryInterface.bulkDelete('companies', null, {});
 	},
 };

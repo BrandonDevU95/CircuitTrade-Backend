@@ -10,57 +10,54 @@ class UserService {
 	async create(data, transaction) {
 		const { rfc, email, ...userData } = data;
 
-		try {
-			// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
-			const normalizedEmail = this.model.normalizeEmail(email);
-			const normalizedRfc = rfc.toUpperCase();
-			const normalizedRoleName = models.Role.normalizeName(userData.role);
+		// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
+		const normalizedEmail = this.model.normalizeEmail(email);
+		const normalizedRfc = rfc.toUpperCase();
+		const normalizedRoleName = models.Role.normalizeName(userData.role);
 
-			// Prevención de duplicados por email
-			const existingUser = await this.model.findOne({
-				where: { email: normalizedEmail },
-				transaction,
-			});
-			if (existingUser) {
-				throw boom.badRequest('User already exists');
-			}
-
-			const company = await models.Company.findOne({
-				where: { rfc: normalizedRfc },
-				transaction,
-			});
-			if (!company) {
-				throw boom.badRequest('Company not found');
-			}
-
-			const role = await models.Role.findOne({
-				where: { name: normalizedRoleName },
-				transaction,
-			});
-
-			if (!role) {
-				throw boom.badRequest('Role not found');
-			}
-
-			const newUser = await this.model.create(
-				{
-					...userData,
-					email: normalizedEmail,
-					companyId: company.id,
-					roleId: role.id,
-				},
-				{ transaction }
-			);
-
-			if (!newUser) {
-				throw boom.badImplementation('Error creating user');
-			}
-
-			const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
-			return userWithoutPassword;
-		} catch (error) {
-			throw error;
+		// Prevención de duplicados por email
+		const existingUser = await this.model.findOne({
+			where: { email: normalizedEmail },
+			transaction,
+		});
+		if (existingUser) {
+			throw boom.badRequest('User already exists');
 		}
+
+		const company = await models.Company.findOne({
+			where: { rfc: normalizedRfc },
+			transaction,
+		});
+		if (!company) {
+			throw boom.badRequest('Company not found');
+		}
+
+		const role = await models.Role.findOne({
+			where: { name: normalizedRoleName },
+			transaction,
+		});
+
+		if (!role) {
+			throw boom.badRequest('Role not found');
+		}
+
+		const newUser = await this.model.create(
+			{
+				...userData,
+				email: normalizedEmail,
+				companyId: company.id,
+				roleId: role.id,
+			},
+			{ transaction }
+		);
+
+		if (!newUser) {
+			throw boom.badImplementation('Error creating user');
+		}
+
+		// eslint-disable-next-line no-unused-vars
+		const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
+		return userWithoutPassword;
 	}
 
 	async update(id, data) {
@@ -77,9 +74,7 @@ class UserService {
 
 			// Solo se procesa la normalización y verificación de duplicados si 'email' está presente
 			if (updateData.email) {
-				const normalizedEmail = this.model.normalizeEmail(
-					updateData.email
-				);
+				const normalizedEmail = this.model.normalizeEmail(updateData.email);
 				const existingUser = await this.model.findOne({
 					where: { email: normalizedEmail },
 					transaction,
@@ -91,9 +86,7 @@ class UserService {
 			}
 
 			if (updateData.role) {
-				const normalizedRoleName = models.Role.normalizeName(
-					updateData.role
-				);
+				const normalizedRoleName = models.Role.normalizeName(updateData.role);
 				const role = await models.Role.findOne({
 					where: { name: normalizedRoleName },
 					transaction,
@@ -145,53 +138,41 @@ class UserService {
 	}
 
 	async find() {
-		try {
-			const users = await this.model.findAll();
+		const users = await this.model.findAll();
 
-			if (!users) {
-				throw boom.notFound('Users not found');
-			}
-			return users;
-		} catch (error) {
-			throw error;
+		if (!users) {
+			throw boom.notFound('Users not found');
 		}
+		return users;
 	}
 
 	async findOne(id) {
-		try {
-			const user = await this.model.findByPk(id, {
-				include: [
-					{
-						model: models.Role,
-						as: 'role',
-					},
-				],
-			});
-			if (!user) {
-				throw boom.notFound('User not found');
-			}
-			return user;
-		} catch (error) {
-			throw error;
+		const user = await this.model.findByPk(id, {
+			include: [
+				{
+					model: models.Role,
+					as: 'role',
+				},
+			],
+		});
+		if (!user) {
+			throw boom.notFound('User not found');
 		}
+		return user;
 	}
 
 	async findByEmail(email) {
-		try {
-			const normalizedEmail = this.model.normalizeEmail(email);
+		const normalizedEmail = this.model.normalizeEmail(email);
 
-			const user = await this.model.findOne({
-				where: { email: normalizedEmail },
-			});
+		const user = await this.model.findOne({
+			where: { email: normalizedEmail },
+		});
 
-			if (!user) {
-				throw boom.notFound('User not found');
-			}
-
-			return user;
-		} catch (error) {
-			throw error;
+		if (!user) {
+			throw boom.notFound('User not found');
 		}
+
+		return user;
 	}
 }
 

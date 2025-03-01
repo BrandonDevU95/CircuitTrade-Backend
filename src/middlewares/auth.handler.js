@@ -49,7 +49,7 @@ async function userAuth(req, res, next) {
 		req.user = JWTManager.decodeToken(newAccessToken);
 		next();
 	} catch (error) {
-		next(boom.unauthorized('Invalid access token'));
+		next(error);
 	}
 }
 

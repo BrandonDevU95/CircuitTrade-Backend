@@ -53,9 +53,7 @@ class RoleService {
 			const updateData = { ...data };
 
 			if (updateData.name !== undefined) {
-				const normalizedName = this.model.normalizeName(
-					updateData.name
-				);
+				const normalizedName = this.model.normalizeName(updateData.name);
 				const existingRole = await this.model.findOne({
 					where: { name: normalizedName },
 					transaction,
@@ -103,29 +101,21 @@ class RoleService {
 	}
 
 	async find() {
-		try {
-			const roles = await this.model.findAll();
+		const roles = await this.model.findAll();
 
-			if (!roles) {
-				throw boom.notFound('Roles not found');
-			}
-			return roles;
-		} catch (error) {
-			throw error;
+		if (!roles) {
+			throw boom.notFound('Roles not found');
 		}
+		return roles;
 	}
 
 	async findOne(id) {
-		try {
-			const role = await this.model.findByPk(id);
+		const role = await this.model.findByPk(id);
 
-			if (!role) {
-				throw boom.notFound('Role not found');
-			}
-			return role;
-		} catch (error) {
-			throw error;
+		if (!role) {
+			throw boom.notFound('Role not found');
 		}
+		return role;
 	}
 }
 

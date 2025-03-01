@@ -9,47 +9,43 @@ class CompanyService {
 	}
 
 	async create(data, transaction) {
-		try {
-			// Se usa la función helper para normalizar los campos
-			const normalizedRfc = this.model.normalizeRfc(data.rfc);
-			const normalizedEmail = this.model.normalizeEmail(data.email);
+		// Se usa la función helper para normalizar los campos
+		const normalizedRfc = this.model.normalizeRfc(data.rfc);
+		const normalizedEmail = this.model.normalizeEmail(data.email);
 
-			// Verificación de duplicados para RFC
-			const existingCompany = await this.model.findOne({
-				where: { rfc: normalizedRfc },
-				transaction,
-			});
-			if (existingCompany) {
-				throw boom.conflict('Company already exists with this RFC');
-			}
-
-			const existingCompanyEmail = await this.model.findOne({
-				where: { email: normalizedEmail },
-				transaction,
-			});
-			if (existingCompanyEmail) {
-				throw boom.conflict('Company already exists with this email');
-			}
-
-			// Preparar datos con campos normalizados
-			const companyData = {
-				...data,
-				rfc: normalizedRfc,
-				email: normalizedEmail,
-			};
-
-			const newCompany = await this.model.create(companyData, {
-				transaction,
-			});
-
-			if (!newCompany) {
-				throw boom.badImplementation('Error creating company');
-			}
-
-			return newCompany;
-		} catch (error) {
-			throw error;
+		// Verificación de duplicados para RFC
+		const existingCompany = await this.model.findOne({
+			where: { rfc: normalizedRfc },
+			transaction,
+		});
+		if (existingCompany) {
+			throw boom.conflict('Company already exists with this RFC');
 		}
+
+		const existingCompanyEmail = await this.model.findOne({
+			where: { email: normalizedEmail },
+			transaction,
+		});
+		if (existingCompanyEmail) {
+			throw boom.conflict('Company already exists with this email');
+		}
+
+		// Preparar datos con campos normalizados
+		const companyData = {
+			...data,
+			rfc: normalizedRfc,
+			email: normalizedEmail,
+		};
+
+		const newCompany = await this.model.create(companyData, {
+			transaction,
+		});
+
+		if (!newCompany) {
+			throw boom.badImplementation('Error creating company');
+		}
+
+		return newCompany;
 	}
 
 	async update(id, data) {
@@ -73,27 +69,21 @@ class CompanyService {
 						transaction,
 					});
 					if (existingCompany) {
-						throw boom.conflict(
-							'Company already exists with this RFC'
-						);
+						throw boom.conflict('Company already exists with this RFC');
 					}
 				}
 				updateData.rfc = normalizedRfc;
 			}
 
 			if (updateData.email !== undefined) {
-				const normalizedEmail = this.model.normalizeEmail(
-					updateData.email
-				);
+				const normalizedEmail = this.model.normalizeEmail(updateData.email);
 				if (normalizedEmail !== company.email) {
 					const existingCompanyEmail = await this.model.findOne({
 						where: { email: normalizedEmail },
 						transaction,
 					});
 					if (existingCompanyEmail) {
-						throw boom.conflict(
-							'Company already exists with this email'
-						);
+						throw boom.conflict('Company already exists with this email');
 					}
 				}
 				updateData.email = normalizedEmail;
@@ -130,9 +120,7 @@ class CompanyService {
 			});
 
 			if (users.length > 0) {
-				throw boom.badRequest(
-					'Cannot delete company with associated users'
-				);
+				throw boom.badRequest('Cannot delete company with associated users');
 			}
 
 			const deletedCompany = await company.destroy({ transaction });
@@ -150,30 +138,22 @@ class CompanyService {
 	}
 
 	async find() {
-		try {
-			const companies = await this.model.findAll();
+		const companies = await this.model.findAll();
 
-			if (!companies) {
-				throw boom.notFound('Companies not found');
-			}
-
-			return companies;
-		} catch (error) {
-			throw error;
+		if (!companies) {
+			throw boom.notFound('Companies not found');
 		}
+
+		return companies;
 	}
 
 	async findOne(id) {
-		try {
-			const company = await this.model.findByPk(id);
+		const company = await this.model.findByPk(id);
 
-			if (!company) {
-				throw boom.notFound('Company not found');
-			}
-			return company;
-		} catch (error) {
-			throw error;
+		if (!company) {
+			throw boom.notFound('Company not found');
 		}
+		return company;
 	}
 }
 

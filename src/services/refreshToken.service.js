@@ -9,24 +9,20 @@ class refreshTokenService {
 	}
 
 	async upsertRefreshToken(userId, token, transaction) {
-		try {
-			const refreshToken = await this.model.upsert(
-				{
-					userId,
-					token,
-					expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
-				},
-				{ returning: true, conflictFields: ['userId'], transaction } // Actualiza si ya existe
-			);
+		const refreshToken = await this.model.upsert(
+			{
+				userId,
+				token,
+				expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
+			},
+			{ returning: true, conflictFields: ['userId'], transaction } // Actualiza si ya existe
+		);
 
-			if (!refreshToken) {
-				throw boom.badImplementation('Error creating refresh token');
-			}
-
-			return refreshToken;
-		} catch (error) {
-			throw error;
+		if (!refreshToken) {
+			throw boom.badImplementation('Error creating refresh token');
 		}
+
+		return refreshToken;
 	}
 
 	async getTokensByUserId(userId) {
