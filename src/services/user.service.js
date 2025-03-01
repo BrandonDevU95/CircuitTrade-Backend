@@ -150,10 +150,15 @@ class UserService {
 
 	async findOne(id) {
 		const user = await this.model.findByPk(id, {
+			attributes: { exclude: ['password'] },
 			include: [
 				{
 					model: models.Role,
 					as: 'role',
+				},
+				{
+					model: models.Company,
+					as: 'company',
 				},
 			],
 		});
