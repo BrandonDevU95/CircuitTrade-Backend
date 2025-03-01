@@ -1,25 +1,36 @@
-require('dotenv').config();
+const { config } = require('../../config/config');
 
 module.exports = {
 	development: {
-		username: process.env.DB_USER,
-		password: process.env.DB_PASSWORD,
-		database: process.env.DB_NAME,
-		host: process.env.DB_HOST,
+		username: config.dbUser,
+		password: config.dbPassword,
+		database: config.dbName,
+		host: config.dbHost,
+		port: config.dbPort,
 		dialect: 'mysql',
+		logging: console.log,
+		ssl: config.env === 'production',
+		dialectOptions: {
+			ssl: {
+				require: config.env === 'production',
+				rejectUnauthorized: false,
+			},
+		},
 	},
 	test: {
-		username: 'root',
-		password: null,
-		database: 'database_test',
-		host: '127.0.0.1',
+		username: config.dbUser,
+		password: config.dbPassword,
+		database: config.dbName,
+		host: config.dbHost,
+		port: config.dbPort,
 		dialect: 'mysql',
 	},
 	production: {
-		username: 'root',
-		password: null,
-		database: 'database_production',
-		host: '127.0.0.1',
+		username: config.dbUser,
+		password: config.dbPassword,
+		database: config.dbName,
+		host: config.dbHost,
+		port: config.dbPort,
 		dialect: 'mysql',
 	},
 };
