@@ -1,10 +1,9 @@
 const boom = require('@hapi/boom');
-const sequelize = require('../lib/sequelize');
-const { models } = require('./../lib/sequelize');
+const sequelize = require('../db');
 
 class RoleService {
 	constructor() {
-		this.model = models.Role;
+		this.model = sequelize.models.Role;
 	}
 
 	async create(data) {

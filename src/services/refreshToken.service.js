@@ -1,11 +1,9 @@
 const boom = require('@hapi/boom');
-const sequelize = require('../lib/sequelize');
-
-const { models } = require('./../lib/sequelize');
+const sequelize = require('../db');
 
 class refreshTokenService {
 	constructor() {
-		this.model = models.RefreshToken;
+		this.model = sequelize.models.RefreshToken;
 	}
 
 	async upsertRefreshToken(userId, token, transaction) {

@@ -1,8 +1,8 @@
 const { Sequelize } = require('sequelize');
-const setupModels = require('../db/models');
+const setupModels = require('./models');
 const { config } = require('../config/config');
 const env = config.env || 'development';
-const connection = require('../db/config/config')[env];
+const connection = require('./config/config')[env];
 
 const sequelize = new Sequelize(connection.database, connection.username, connection.password, {
 	host: connection.host,

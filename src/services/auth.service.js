@@ -4,7 +4,7 @@ const RefreshTokenService = require('./refreshToken.service');
 const JWTManager = require('../utils/jwt.utils');
 const boom = require('@hapi/boom');
 const { verifyPassword } = require('../utils/auth.utils');
-const sequelize = require('../lib/sequelize');
+const sequelize = require('../db');
 class AuthService {
 	constructor() {
 		this.userService = new UserService();
