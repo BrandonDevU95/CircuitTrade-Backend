@@ -9,6 +9,9 @@ const sequelize = new Sequelize(connection.database, connection.username, connec
 	port: connection.port,
 	dialect: connection.dialect,
 	logging: connection.logging,
+	pool: connection.pool,
+	ssl: connection.ssl,
+	dialectOptions: connection.dialectOptions,
 });
 
 setupModels(sequelize);
