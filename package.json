@@ -52,6 +52,7 @@
 		"helmet": "8.0.0",
 		"joi": "17.13.3",
 		"jsonwebtoken": "9.0.2",
+		"module-alias": "^2.2.3",
 		"mysql2": "3.10.3",
 		"passport": "0.7.0",
 		"passport-jwt": "4.0.1",
@@ -61,5 +62,15 @@
 	"engines": {
 		"node": ">=18.0.0",
 		"npm": ">=9.0.0"
+	},
+	"_moduleAliases": {
+		"@auth": "src/auth",
+		"@config": "src/config",
+		"@db": "src/db",
+		"@middlewares": "src/middlewares",
+		"@routes": "src/routes",
+		"@schemas": "src/schemas",
+		"@services": "src/services",
+		"@utils": "src/utils"
 	}
 }
