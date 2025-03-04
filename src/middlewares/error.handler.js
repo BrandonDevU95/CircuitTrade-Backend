@@ -54,4 +54,11 @@ function ormErrorHandler(err, req, res, next) {
 	}
 }
 
-module.exports = { logErrors, errorHandler, boomErrorHandler, ormErrorHandler };
+function notFoundHandler(req, res) {
+	res.status(404).json({
+		message: 'Not found',
+		status: 404,
+	});
+}
+
+module.exports = { logErrors, errorHandler, boomErrorHandler, ormErrorHandler, notFoundHandler };
