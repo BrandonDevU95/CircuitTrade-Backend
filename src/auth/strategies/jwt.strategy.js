@@ -14,10 +14,6 @@ const options = {
 
 const JWTStrategy = new Strategy(options, async (req, payload, done) => {
 	try {
-		if (!req.user || payload.sub !== req.user.sub) {
-			return done(boom.unauthorized(), false);
-		}
-
 		const user = await User.findByPk(payload.sub, {
 			attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
 		});
