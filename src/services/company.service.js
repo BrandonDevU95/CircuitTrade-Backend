@@ -3,16 +3,17 @@ const sequelize = require('@db');
 
 class CompanyService {
 	constructor() {
-		this.model = sequelize.models.Company;
+		this.companyService = sequelize.models.Company;
+		this.userService = sequelize.models.User;
 	}
 
 	async create(data, transaction) {
 		// Se usa la función helper para normalizar los campos
-		const normalizedRfc = this.model.normalizeRfc(data.rfc);
-		const normalizedEmail = this.model.normalizeEmail(data.email);
+		const normalizedRfc = this.companyService.normalizeRfc(data.rfc);
+		const normalizedEmail = this.companyService.normalizeEmail(data.email);
 
 		// Verificación de duplicados para RFC
-		const existingCompany = await this.model.findOne({
+		const existingCompany = await this.companyService.findOne({
 			where: { rfc: normalizedRfc },
 			transaction,
 		});
@@ -20,7 +21,7 @@ class CompanyService {
 			throw boom.conflict('Company already exists with this RFC');
 		}
 
-		const existingCompanyEmail = await this.model.findOne({
+		const existingCompanyEmail = await this.companyService.findOne({
 			where: { email: normalizedEmail },
 			transaction,
 		});
@@ -35,7 +36,7 @@ class CompanyService {
 			email: normalizedEmail,
 		};
 
-		const newCompany = await this.model.create(companyData, {
+		const newCompany = await this.companyService.create(companyData, {
 			transaction,
 		});
 
@@ -49,7 +50,7 @@ class CompanyService {
 	async update(id, data) {
 		const transaction = await sequelize.transaction();
 		try {
-			const company = await this.model.findByPk(id, { transaction });
+			const company = await this.companyService.findByPk(id, { transaction });
 
 			if (!company) {
 				throw boom.notFound('Company not found');
@@ -59,10 +60,10 @@ class CompanyService {
 			const updateData = { ...data };
 
 			if (updateData.rfc !== undefined) {
-				const normalizedRfc = this.model.normalizeRfc(updateData.rfc);
+				const normalizedRfc = this.companyService.normalizeRfc(updateData.rfc);
 				if (normalizedRfc !== company.rfc) {
 					// Verifica duplicados para RFC si se intenta cambiar
-					const existingCompany = await this.model.findOne({
+					const existingCompany = await this.companyService.findOne({
 						where: { rfc: normalizedRfc },
 						transaction,
 					});
@@ -74,9 +75,9 @@ class CompanyService {
 			}
 
 			if (updateData.email !== undefined) {
-				const normalizedEmail = this.model.normalizeEmail(updateData.email);
+				const normalizedEmail = this.companyService.normalizeEmail(updateData.email);
 				if (normalizedEmail !== company.email) {
-					const existingCompanyEmail = await this.model.findOne({
+					const existingCompanyEmail = await this.companyService.findOne({
 						where: { email: normalizedEmail },
 						transaction,
 					});
@@ -106,13 +107,13 @@ class CompanyService {
 	async delete(id) {
 		const transaction = await sequelize.transaction();
 		try {
-			const company = await this.model.findByPk(id, { transaction });
+			const company = await this.companyService.findByPk(id, { transaction });
 
 			if (!company) {
 				throw boom.notFound('Company not found');
 			}
 
-			const users = await models.User.findAll({
+			const users = await this.userService.findAll({
 				where: { companyId: id },
 				transaction,
 			});
@@ -136,7 +137,7 @@ class CompanyService {
 	}
 
 	async find() {
-		const companies = await this.model.findAll();
+		const companies = await this.companyService.findAll();
 
 		if (!companies) {
 			throw boom.notFound('Companies not found');
@@ -146,7 +147,7 @@ class CompanyService {
 	}
 
 	async findOne(id) {
-		const company = await this.model.findByPk(id);
+		const company = await this.companyService.findByPk(id);
 
 		if (!company) {
 			throw boom.notFound('Company not found');

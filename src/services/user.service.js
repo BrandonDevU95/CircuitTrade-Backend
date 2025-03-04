@@ -3,19 +3,21 @@ const sequelize = require('@db');
 
 class UserService {
 	constructor() {
-		this.model = sequelize.models.User;
+		this.userService = sequelize.models.User;
+		this.companyService = sequelize.models.Company;
+		this.roleService = sequelize.models.Role;
 	}
 
 	async create(data, transaction) {
 		const { rfc, email, ...userData } = data;
 
 		// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
-		const normalizedEmail = this.model.normalizeEmail(email);
+		const normalizedEmail = this.userService.normalizeEmail(email);
 		const normalizedRfc = rfc.toUpperCase();
-		const normalizedRoleName = models.Role.normalizeName(userData.role);
+		const normalizedRoleName = this.roleService.normalizeName(userData.role);
 
 		// Prevención de duplicados por email
-		const existingUser = await this.model.findOne({
+		const existingUser = await this.userService.findOne({
 			where: { email: normalizedEmail },
 			transaction,
 		});
@@ -23,7 +25,7 @@ class UserService {
 			throw boom.badRequest('User already exists');
 		}
 
-		const company = await models.Company.findOne({
+		const company = await this.companyService.findOne({
 			where: { rfc: normalizedRfc },
 			transaction,
 		});
@@ -31,7 +33,7 @@ class UserService {
 			throw boom.badRequest('Company not found');
 		}
 
-		const role = await models.Role.findOne({
+		const role = await this.roleService.findOne({
 			where: { name: normalizedRoleName },
 			transaction,
 		});
@@ -40,7 +42,7 @@ class UserService {
 			throw boom.badRequest('Role not found');
 		}
 
-		const newUser = await this.model.create(
+		const newUser = await this.userService.create(
 			{
 				...userData,
 				email: normalizedEmail,
@@ -62,7 +64,7 @@ class UserService {
 	async update(id, data) {
 		const transaction = await sequelize.transaction();
 		try {
-			const user = await this.model.findByPk(id, { transaction });
+			const user = await this.userService.findByPk(id, { transaction });
 
 			if (!user) {
 				throw boom.notFound('User not found');
@@ -73,8 +75,8 @@ class UserService {
 
 			// Solo se procesa la normalización y verificación de duplicados si 'email' está presente
 			if (updateData.email) {
-				const normalizedEmail = this.model.normalizeEmail(updateData.email);
-				const existingUser = await this.model.findOne({
+				const normalizedEmail = this.userService.normalizeEmail(updateData.email);
+				const existingUser = await this.userService.findOne({
 					where: { email: normalizedEmail },
 					transaction,
 				});
@@ -85,8 +87,8 @@ class UserService {
 			}
 
 			if (updateData.role) {
-				const normalizedRoleName = models.Role.normalizeName(updateData.role);
-				const role = await models.Role.findOne({
+				const normalizedRoleName = this.roleService.normalizeName(updateData.role);
+				const role = await this.roleService.findOne({
 					where: { name: normalizedRoleName },
 					transaction,
 				});
@@ -116,7 +118,7 @@ class UserService {
 		const transaction = await sequelize.transaction();
 
 		try {
-			const user = await this.model.findByPk(id, { transaction });
+			const user = await this.userService.findByPk(id, { transaction });
 
 			if (!user) {
 				throw boom.notFound('User not found');
@@ -137,7 +139,7 @@ class UserService {
 	}
 
 	async find() {
-		const users = await this.model.findAll({
+		const users = await this.userService.findAll({
 			attributes: { exclude: ['password'] },
 		});
 
@@ -148,15 +150,15 @@ class UserService {
 	}
 
 	async findOne(id) {
-		const user = await this.model.findByPk(id, {
+		const user = await this.userService.findByPk(id, {
 			attributes: { exclude: ['password'] },
 			include: [
 				{
-					model: models.Role,
+					model: this.roleService,
 					as: 'role',
 				},
 				{
-					model: models.Company,
+					model: this.companyService,
 					as: 'company',
 				},
 			],
@@ -168,9 +170,9 @@ class UserService {
 	}
 
 	async findByEmail(email) {
-		const normalizedEmail = this.model.normalizeEmail(email);
+		const normalizedEmail = this.userService.normalizeEmail(email);
 
-		const user = await this.model.findOne({
+		const user = await this.userService.findOne({
 			where: { email: normalizedEmail },
 		});
 

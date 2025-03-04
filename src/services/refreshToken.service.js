@@ -3,11 +3,12 @@ const sequelize = require('@db');
 
 class refreshTokenService {
 	constructor() {
-		this.model = sequelize.models.RefreshToken;
+		this.refreshTokenService = sequelize.models.RefreshToken;
+		this.userService = sequelize.models.User;
 	}
 
 	async upsertRefreshToken(userId, token, transaction) {
-		const refreshToken = await this.model.upsert(
+		const refreshToken = await this.refreshTokenService.upsert(
 			{
 				userId,
 				token,
@@ -24,10 +25,10 @@ class refreshTokenService {
 	}
 
 	async getTokensByUserId(userId) {
-		const refreshToken = await this.model.findOne({
+		const refreshToken = await this.refreshTokenService.findOne({
 			where: { userId },
 			include: {
-				model: models.User,
+				model: this.userService,
 				as: 'user',
 				attributes: ['id', 'role_id'],
 			},
@@ -44,7 +45,7 @@ class refreshTokenService {
 		const transaction = await sequelize.transaction();
 
 		try {
-			const refreshToken = await this.model.findOne({
+			const refreshToken = await this.refreshTokenService.findOne({
 				where: { userId },
 				transaction,
 			});
