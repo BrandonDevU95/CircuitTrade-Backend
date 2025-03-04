@@ -1,10 +1,10 @@
 const UserService = require('./user.service');
 const CompanyService = require('./company.service');
 const RefreshTokenService = require('./refreshToken.service');
-const JWTManager = require('../utils/jwt.utils');
+const JWTManager = require('@utils/jwt.utils');
 const boom = require('@hapi/boom');
-const { verifyPassword } = require('../utils/auth.utils');
-const sequelize = require('../db');
+const { verifyPassword } = require('@utils/auth.utils');
+const sequelize = require('@db');
 class AuthService {
 	constructor() {
 		this.userService = new UserService();

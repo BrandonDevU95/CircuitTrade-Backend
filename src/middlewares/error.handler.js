@@ -1,6 +1,6 @@
 const { ValidationError, UniqueConstraintError } = require('sequelize');
 
-const { config } = require('../config/config');
+const { config } = require('@config/config');
 
 function logErrors(err, req, res, next) {
 	// eslint-disable-next-line no-console

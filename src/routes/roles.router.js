@@ -1,13 +1,13 @@
 const express = require('express');
 
-const roleService = require('../services/role.service');
-const validatorHandler = require('../middlewares/validator.handler');
+const roleService = require('@services/role.service');
+const validatorHandler = require('@middlewares/validator.handler');
 
 const {
 	createRoleSchema,
 	updateRoleSchema,
 	getRoleSchema,
-} = require('../schemas/role.schema');
+} = require('@schemas/role.schema');
 
 const router = express.Router();
 const service = new roleService();

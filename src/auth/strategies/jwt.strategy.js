@@ -1,8 +1,8 @@
 const { Strategy, ExtractJwt } = require('passport-jwt');
-const { User } = require('../../db/models/user.model');
+const { User } = require('@db/models/user.model');
 const boom = require('@hapi/boom');
 
-const { config } = require('../../config/config');
+const { config } = require('@config/config');
 
 const options = {
 	secretOrKey: config.jwtSecret,

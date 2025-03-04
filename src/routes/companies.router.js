@@ -1,12 +1,12 @@
 const express = require('express');
-const sequelize = require('../db');
-const CompanyService = require('../services/company.service');
-const validatorHandler = require('../middlewares/validator.handler');
+const sequelize = require('@db');
+const CompanyService = require('@services/company.service');
+const validatorHandler = require('@middlewares/validator.handler');
 const {
 	createCompanySchema,
 	updateCompanySchema,
 	getCompanySchema,
-} = require('../schemas/company.schema');
+} = require('@schemas/company.schema');
 
 const router = express.Router();
 const service = new CompanyService();

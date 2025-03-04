@@ -1,15 +1,16 @@
 require('dotenv').config();
-const { config } = require('./src/config/config');
-const routerApi = require('./src/routes');
+require('module-alias/register');
+const { config } = require('@config/config');
+const routerApi = require('@routes');
 const express = require('express');
 const cookieParser = require('cookie-parser');
-const configureCors = require('./src/middlewares/cors');
+const configureCors = require('@middlewares/cors');
 const {
 	logErrors,
 	ormErrorHandler,
 	boomErrorHandler,
 	errorHandler,
-} = require('./src/middlewares/error.handler');
+} = require('@middlewares/error.handler');
 const PORT = config.port;
 
 const app = express();
@@ -18,7 +19,7 @@ app.use(express.json());
 configureCors(app);
 app.use(cookieParser());
 
-require('./src/auth');
+require('@auth');
 
 app.get('/', (req, res) => {
 	res.send('Hello World');

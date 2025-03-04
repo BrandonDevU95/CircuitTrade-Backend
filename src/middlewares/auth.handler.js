@@ -1,6 +1,6 @@
-const JWTManager = require('../utils/jwt.utils');
+const JWTManager = require('@utils/jwt.utils');
 const boom = require('@hapi/boom');
-const RefreshTokenService = require('../services/refreshToken.service');
+const RefreshTokenService = require('@services/refreshToken.service');
 
 const service = new RefreshTokenService();
 

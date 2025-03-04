@@ -1,5 +1,5 @@
 const { Model, DataTypes } = require('sequelize');
-const { encryptPassword } = require('./../../utils/auth.utils');
+const { encryptPassword } = require('@utils/auth.utils');
 
 const USER_TABLE = 'users';
 

@@ -1,13 +1,13 @@
 const express = require('express');
 const passport = require('passport');
-const JWTManager = require('../utils/jwt.utils');
-const validatorHandler = require('../middlewares/validator.handler');
-const { signInSchema, signUpSchema } = require('../schemas/auth.schema');
-const RefreshTokenService = require('../services/refreshToken.service');
-const AuthService = require('../services/auth.service');
+const JWTManager = require('@utils/jwt.utils');
+const validatorHandler = require('@middlewares/validator.handler');
+const { signInSchema, signUpSchema } = require('@schemas/auth.schema');
+const RefreshTokenService = require('@services/refreshToken.service');
+const AuthService = require('@services/auth.service');
 const boom = require('@hapi/boom');
-const sequelize = require('../db');
-const { config } = require('../config/config');
+const sequelize = require('@db');
+const { config } = require('@config/config');
 
 const refreshTokenService = new RefreshTokenService();
 const authService = new AuthService();

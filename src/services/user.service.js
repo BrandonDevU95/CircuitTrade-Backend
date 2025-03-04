@@ -1,5 +1,5 @@
 const boom = require('@hapi/boom');
-const sequelize = require('../db');
+const sequelize = require('@db');
 
 class UserService {
 	constructor() {
