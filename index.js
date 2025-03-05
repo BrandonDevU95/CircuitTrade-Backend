@@ -1,39 +1,110 @@
+// Core modlues
+const express = require('express');
+
+// Third party modules
 require('dotenv').config();
 require('module-alias/register');
+require('express-async-errors');
+const helmet = require("helmet");
+const cookieParser = require('cookie-parser');
+const rateLimit = require("express-rate-limit");
+
+
+// Custom modules
 const { config } = require('@config/config');
 const routerApi = require('@routes');
-const express = require('express');
-const cookieParser = require('cookie-parser');
 const configureCors = require('@middlewares/cors');
+const configureAuth = require('@auth');
 const {
 	logErrors,
 	ormErrorHandler,
 	boomErrorHandler,
 	errorHandler,
+	notFoundHandler,
 } = require('@middlewares/error.handler');
+
+// Check required environment variables
+const requiredEnvVars = [
+	'port',
+	'env',
+	'dbUser',
+	'dbPassword',
+	'dbHost',
+	'dbName',
+	'dbPort',
+	'jwtSecret',
+	'jwtRefreshSecret',
+	'bcryptSaltRounds',
+];
+
+requiredEnvVars.forEach((envVar) => {
+	if (!config[envVar]) {
+		throw new Error(`Missing ${envVar} environment variable`);
+	}
+});
+
+if (isNaN(config.bcryptSaltRounds) || config.bcryptSaltRounds < 1) {
+	throw new Error('Invalid BCRYPT_SALT environment variable');
+}
+
+// Constants
 const PORT = config.port;
-
 const app = express();
+const limiter = rateLimit({
+	windowMs: 15 * 60 * 1000, // 15 minutes
+	max: 500, // limit each IP to 500 requests per windowMs
+	skip: (req) => req.path === "/health"
+});
 
+// Settings (Ej: Nginx)
+app.set('trust proxy', 1);
+
+// Middlewares
 app.use(express.json());
-configureCors(app);
 app.use(cookieParser());
+app.use(helmet());
+app.use(limiter);
+configureCors(app);
 
-require('@auth');
+// Auth Strategies
+configureAuth(app);
 
-app.get('/', (req, res) => {
-	res.send('Hello World');
+// Health check
+app.get('/health', (req, res) => {
+	res.status(200).json({
+		status: 'OK',
+		version: config.version,
+		environment: config.env
+	});
 });
 
 //Routes
 routerApi(app);
 
+// 404 Handler
+app.use(notFoundHandler);
+
+// Error handlers
 app.use(logErrors);
 app.use(ormErrorHandler);
 app.use(boomErrorHandler);
 app.use(errorHandler);
 
-app.listen(PORT, () => {
+// Server
+const server = app.listen(PORT, () => {
 	// eslint-disable-next-line no-console
 	console.log(`Server is running on port ${PORT}`);
 });
+
+const shutdown = (signal) => {
+	// eslint-disable-next-line no-console
+	console.log(`${signal} signal received.`);
+	server.close(() => {
+		// eslint-disable-next-line no-console
+		console.log('Server closed');
+		process.exit(0);
+	});
+}
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
