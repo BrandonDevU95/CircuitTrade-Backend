@@ -47,26 +47,22 @@ router.post(
 	}
 );
 
-router.post('/sign-up', validatorHandler(signUpSchema, 'body'), async (req, res, next) => {
-	try {
-		const { company, user } = req.body;
-		const userData = await authService.signUp(company, user);
+router.post('/sign-up', validatorHandler(signUpSchema, 'body'), async (req, res) => {
+	const { company, user } = req.body;
+	const userData = await authService.signUp(company, user);
 
-		if (!userData || !userData?.user || !userData?.accessToken) {
-			throw boom.badImplementation('Error creating user');
-		}
-
-		res.cookie('access_token', userData.accessToken, {
-			httpOnly: true,
-			secure: config.env === 'production',
-			sameSite: 'Strict',
-			maxAge: 1000 * 60 * 15, // 15 minutes
-		});
-
-		res.status(201).json({ user: userData.user });
-	} catch (error) {
-		next(error);
+	if (!userData || !userData?.user || !userData?.accessToken) {
+		throw boom.badImplementation('Error creating user');
 	}
+
+	res.cookie('access_token', userData.accessToken, {
+		httpOnly: true,
+		secure: config.env === 'production',
+		sameSite: 'Strict',
+		maxAge: 1000 * 60 * 15, // 15 minutes
+	});
+
+	res.status(201).json({ user: userData.user });
 });
 
 module.exports = router;
