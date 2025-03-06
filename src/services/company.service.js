@@ -1,157 +1,130 @@
 const boom = require('@hapi/boom');
 const sequelize = require('@db');
+const { runInTransaction } = require('@utils/transaction.utils');
 
 class CompanyService {
 	constructor() {
-		this.companyService = sequelize.models.Company;
-		this.userService = sequelize.models.User;
+		this.companyModel = sequelize.models.Company;
+		this.userModel = sequelize.models.User;
 	}
 
-	async create(data, transaction) {
-		// Se usa la función helper para normalizar los campos
-		const normalizedRfc = this.companyService.normalizeRfc(data.rfc);
-		const normalizedEmail = this.companyService.normalizeEmail(data.email);
+	async create(data, transaction = null) {
+		return runInTransaction(async (t) => {
+			// Se usa la función helper para normalizar los campos
+			const normalizedRfc = this.companyModel.normalizeRfc(data.rfc);
+			const normalizedEmail = this.companyModel.normalizeEmail(data.email);
 
-		// Verificación de duplicados para RFC
-		const existingCompany = await this.companyService.findOne({
-			where: { rfc: normalizedRfc },
-			transaction,
-		});
-		if (existingCompany) {
-			throw boom.conflict('Company already exists with this RFC');
-		}
+			// Verificación de duplicados para RFC
+			const existing = await this.companyModel.findOne({
+				where: {
+					[sequelize.Op.or]: [
+						{ rfc: normalizedRfc },
+						{ email: normalizedEmail },
+					],
+				},
+				transaction: t,
+			});
 
-		const existingCompanyEmail = await this.companyService.findOne({
-			where: { email: normalizedEmail },
-			transaction,
-		});
-		if (existingCompanyEmail) {
-			throw boom.conflict('Company already exists with this email');
-		}
+			if (existing) {
+				if (existing.rfc === normalizedRfc) throw boom.conflict('Company already exists with this RFC');
+				if (existing.email === normalizedEmail) throw boom.conflict('Company already exists with this email');
+			}
+			// Preparar datos con campos normalizados
+			const companyData = {
+				...data,
+				rfc: normalizedRfc,
+				email: normalizedEmail,
+			};
 
-		// Preparar datos con campos normalizados
-		const companyData = {
-			...data,
-			rfc: normalizedRfc,
-			email: normalizedEmail,
-		};
-
-		const newCompany = await this.companyService.create(companyData, {
-			transaction,
-		});
-
-		if (!newCompany) {
-			throw boom.badImplementation('Error creating company');
-		}
-
-		return newCompany;
+			return this.companyModel.create(companyData, {
+				transaction: t,
+			})
+		}, transaction);
 	}
 
 	async update(id, data) {
-		const transaction = await sequelize.transaction();
-		try {
-			const company = await this.companyService.findByPk(id, { transaction });
-
-			if (!company) {
-				throw boom.notFound('Company not found');
-			}
+		return sequelize.transaction(async (transaction) => {
+			const company = await this.companyModel.findByPk(id, { transaction, rejectOnEmpty: boom.notFound('Company not found') });
 
 			// Manejo condicional para actualizar campos de forma segura en actualizaciones parciales
 			const updateData = { ...data };
 
-			if (updateData.rfc !== undefined) {
-				const normalizedRfc = this.companyService.normalizeRfc(updateData.rfc);
+			if ('rfc' in updateData) {
+				const normalizedRfc = this.companyModel.normalizeRfc(updateData.rfc);
+
 				if (normalizedRfc !== company.rfc) {
 					// Verifica duplicados para RFC si se intenta cambiar
-					const existingCompany = await this.companyService.findOne({
+					const existingCompany = await this.companyModel.findOne({
 						where: { rfc: normalizedRfc },
 						transaction,
 					});
-					if (existingCompany) {
-						throw boom.conflict('Company already exists with this RFC');
-					}
+
+					if (existingCompany) throw boom.conflict('Company already exists with this RFC');
+
+					updateData.rfc = normalizedRfc;
+				} else {
+					delete updateData.rfc;
 				}
-				updateData.rfc = normalizedRfc;
 			}
 
-			if (updateData.email !== undefined) {
-				const normalizedEmail = this.companyService.normalizeEmail(updateData.email);
+			if ('email' in updateData) {
+				const normalizedEmail = this.companyModel.normalizeEmail(updateData.email);
+
 				if (normalizedEmail !== company.email) {
-					const existingCompanyEmail = await this.companyService.findOne({
+					const existingCompanyEmail = await this.companyModel.findOne({
 						where: { email: normalizedEmail },
 						transaction,
 					});
-					if (existingCompanyEmail) {
-						throw boom.conflict('Company already exists with this email');
-					}
+
+					if (existingCompanyEmail) throw boom.conflict('Company already exists with this email');
+
+					updateData.email = normalizedEmail;
+				} else {
+					delete updateData.email;
 				}
-				updateData.email = normalizedEmail;
+
 			}
 
-			const updatedCompany = await company.update(updateData, {
+			const [affectedCount] = await company.update(updateData, {
 				transaction,
 			});
 
-			if (!updatedCompany) {
-				throw boom.badImplementation('Error updating company');
-			}
+			if (affectedCount === 0) throw boom.badImplementation('Failed to update company: No rows affected');
 
-			await transaction.commit();
-			return updatedCompany;
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return company.reload({ transaction });
+		});
 	}
 
 	async delete(id) {
-		const transaction = await sequelize.transaction();
-		try {
-			const company = await this.companyService.findByPk(id, { transaction });
-
-			if (!company) {
-				throw boom.notFound('Company not found');
-			}
-
-			const users = await this.userService.findAll({
+		return sequelize.transaction(async (transaction) => {
+			const users = await this.userModel.findAll({
 				where: { companyId: id },
 				transaction,
 			});
 
-			if (users.length > 0) {
-				throw boom.badRequest('Cannot delete company with associated users');
-			}
+			if (users.length > 0) throw boom.badRequest('Cannot delete company with associated users');
 
-			const deletedCompany = await company.destroy({ transaction });
+			const deletedCount = await this.companyModel.destroy({ where: { id }, transaction });
 
-			if (!deletedCompany) {
-				throw boom.badImplementation('Error deleting company');
-			}
+			if (deletedCount === 0) throw boom.notFound('Failed to delete company: No rows affected');
 
-			await transaction.commit();
-			return { id: deletedCompany.id };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return { id, message: 'Company deleted successfully' };
+		});
 	}
 
 	async find() {
-		const companies = await this.companyService.findAll();
+		const companies = await this.companyModel.findAll();
 
-		if (!companies) {
-			throw boom.notFound('Companies not found');
-		}
+		if (companies.length === 0) throw boom.notFound('Companies not found');
 
 		return companies;
 	}
 
 	async findOne(id) {
-		const company = await this.companyService.findByPk(id);
+		const company = await this.companyModel.findByPk(id, {
+			rejectOnEmpty: boom.notFound('Company not found'),
+		});
 
-		if (!company) {
-			throw boom.notFound('Company not found');
-		}
 		return company;
 	}
 }

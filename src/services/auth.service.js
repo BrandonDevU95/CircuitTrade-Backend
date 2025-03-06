@@ -7,13 +7,13 @@ const { verifyPassword } = require('@utils/auth.utils');
 const sequelize = require('@db');
 class AuthService {
 	constructor() {
-		this.userService = new UserService();
-		this.companyService = new CompanyService();
-		this.refreshTokenService = new RefreshTokenService();
+		this.userModel = new UserService();
+		this.companyModel = new CompanyService();
+		this.refreshTokenModel = new RefreshTokenService();
 	}
 
 	async getUser(email, password) {
-		const user = await this.userService.findByEmail(email);
+		const user = await this.userModel.findByEmail(email);
 
 		if (!user.isActive) {
 			throw boom.unauthorized('User is not active');
@@ -34,12 +34,11 @@ class AuthService {
 	}
 
 	async signUp(companyData, userData) {
-		const transaction = await sequelize.transaction();
-		try {
-			const company = await this.companyService.create(companyData, transaction);
+		return sequelize.transaction(async (transaction) => {
+			const company = await this.companyModel.create(companyData, transaction);
 
 			// Crear usuario vinculado a la empresa (usando el RFC de la empresa)
-			const user = await this.userService.create(
+			const user = await this.userModel.create(
 				{ ...userData, rfc: company.rfc }, // Envía el RFC de la empresa
 				transaction
 			);
@@ -51,19 +50,10 @@ class AuthService {
 				throw boom.badImplementation('Error generating tokens');
 			}
 
-			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, transaction);
+			await this.refreshTokenModel.upsertRefreshToken(user.id, refreshToken, transaction);
 
-			await transaction.commit();
 			return { user, accessToken };
-		} catch (error) {
-			await transaction.rollback();
-
-			if (boom.isBoom(error)) {
-				throw error;
-			}
-
-			throw error;
-		}
+		});
 	}
 }
 

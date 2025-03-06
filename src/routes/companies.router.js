@@ -1,5 +1,4 @@
 const express = require('express');
-const sequelize = require('@db');
 const CompanyService = require('@services/company.service');
 const validatorHandler = require('@middlewares/validator.handler');
 const {
@@ -23,17 +22,9 @@ router.get('/:id', validatorHandler(getCompanySchema, 'params'), async (req, res
 });
 
 router.post('/', validatorHandler(createCompanySchema, 'body'), async (req, res, next) => {
-	const transaction = await sequelize.transaction();
-	try {
-		const body = req.body;
-		const newCompany = await service.create(body, transaction);
-
-		await transaction.commit();
-		res.status(201).json(newCompany);
-	} catch (error) {
-		await transaction.rollback();
-		next(error);
-	}
+	const body = req.body;
+	const newCompany = await service.create(body);
+	res.status(201).json(newCompany);
 });
 
 router.patch(

@@ -6,7 +6,6 @@ const { signInSchema, signUpSchema } = require('@schemas/auth.schema');
 const RefreshTokenService = require('@services/refreshToken.service');
 const AuthService = require('@services/auth.service');
 const boom = require('@hapi/boom');
-const sequelize = require('@db');
 const { config } = require('@config/config');
 
 const refreshTokenService = new RefreshTokenService();
@@ -17,33 +16,26 @@ router.post(
 	'/sign-in',
 	validatorHandler(signInSchema, 'body'),
 	passport.authenticate('local', { session: false }),
-	async (req, res, next) => {
-		const transaction = await sequelize.transaction();
-		try {
-			const user = req.user;
+	async (req, res) => {
+		const user = req.user;
 
-			const accessToken = JWTManager.generateAccessToken(user);
-			const refreshToken = JWTManager.generateRefreshToken(user);
+		const accessToken = JWTManager.generateAccessToken(user);
+		const refreshToken = JWTManager.generateRefreshToken(user);
 
-			if (!accessToken || !refreshToken) {
-				throw boom.badImplementation('Error generating tokens');
-			}
-
-			await refreshTokenService.upsertRefreshToken(user.id, refreshToken, transaction);
-
-			res.cookie('access_token', accessToken, {
-				httpOnly: true,
-				secure: config.env === 'production',
-				sameSite: 'Strict',
-				maxAge: 1000 * 60 * 15, // 15 minutes
-			});
-
-			await transaction.commit();
-			res.status(200).json({ user });
-		} catch (error) {
-			await transaction.rollback();
-			next(error);
+		if (!accessToken || !refreshToken) {
+			throw boom.badImplementation('Error generating tokens');
 		}
+
+		await refreshTokenService.upsertRefreshToken(user.id, refreshToken);
+
+		res.cookie('access_token', accessToken, {
+			httpOnly: true,
+			secure: config.env === 'production',
+			sameSite: 'Strict',
+			maxAge: 1000 * 60 * 15, // 15 minutes
+		});
+
+		res.status(200).json({ user });
 	}
 );
 

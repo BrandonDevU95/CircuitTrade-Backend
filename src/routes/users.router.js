@@ -1,5 +1,4 @@
 const express = require('express');
-const sequelize = require('@db');
 const userService = require('@services/user.service');
 const validatorHandler = require('@middlewares/validator.handler');
 
@@ -20,21 +19,9 @@ router.get('/:id', validatorHandler(getUserSchema, 'params'), async (req, res) =
 });
 
 router.post('/', validatorHandler(createUserSchema, 'body'), async (req, res, next) => {
-	const transaction = await sequelize.transaction();
-	try {
-		const body = req.body;
-		const newUser = await service.create(body, transaction);
-
-		if (!newUser) {
-			throw new Error('User was not created');
-		}
-
-		await transaction.commit();
-		res.status(201).json(newUser);
-	} catch (error) {
-		await transaction.rollback();
-		next(error);
-	}
+	const body = req.body;
+	const newUser = await service.create(body);
+	res.status(201).json(newUser);
 });
 
 router.patch(

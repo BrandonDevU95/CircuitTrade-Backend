@@ -7,113 +7,77 @@ class RoleService {
 	}
 
 	async create(data) {
-		const transaction = await sequelize.transaction();
-		try {
+		return sequelize.transaction(async (transaction) => {
 			// Se utiliza el método helper normalizeName para obtener el nombre normalizado.
 			const normalizedName = this.model.normalizeName(data.name);
 
-			const existingRole = await this.model.findOne({
+			const [role] = await this.model.findOrCreate({
 				where: { name: normalizedName },
+				defaults: { ...data, name: normalizedName },
 				transaction,
 			});
-			if (existingRole) {
-				throw boom.badRequest('Role already exists');
-			}
 
-			const newRole = await this.model.create(
-				{
-					...data,
-					name: normalizedName,
-				},
-				{ transaction }
-			);
-
-			if (!newRole) {
-				throw boom.badImplementation('Error creating role');
-			}
-
-			await transaction.commit();
-			return newRole;
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return role;
+		});
 	}
 
 	async update(id, data) {
-		const transaction = await sequelize.transaction();
-		try {
-			const role = await this.model.findByPk(id, { transaction });
-
-			if (!role) {
-				throw boom.notFound('Role not found');
-			}
+		return sequelize.transaction(async (transaction) => {
+			const role = await this.model.findByPk(id, { transaction, rejectOnEmpty: boom.notFound('Role not found') });
 
 			const updateData = { ...data };
 
-			if (updateData.name !== undefined) {
+			if ('name' in updateData) {
 				const normalizedName = this.model.normalizeName(updateData.name);
-				const existingRole = await this.model.findOne({
-					where: { name: normalizedName },
-					transaction,
-				});
-				if (existingRole && existingRole.id !== id) {
-					throw boom.badRequest('Role already exists');
+
+				// Se verifica si el nuevo nombre es diferente al actual.
+				if (normalizedName !== role.name) {
+					const existingRole = await this.model.findOne({
+						where: { name: normalizedName },
+						transaction,
+					});
+
+					if (existingRole) throw boom.badRequest('Role already exists');
+
+					updateData.name = normalizedName;
+				} else {
+					delete updateData.name;
 				}
-				updateData.name = normalizedName;
 			}
 
-			const updatedRole = await role.update(updateData, { transaction });
+			const [affectedCount] = await role.update(updateData, { transaction });
 
-			if (!updatedRole) {
-				throw boom.badImplementation('Error updating role');
+			if (affectedCount === 0) {
+				throw boom.badImplementation('Failed to update role: No rows affected');
 			}
 
-			await transaction.commit();
-			return updatedRole;
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return role.reload({ transaction });
+		});
 	}
 
 	async delete(id) {
-		const transaction = await sequelize.transaction();
-		try {
-			const role = await this.model.findByPk(id, { transaction });
-			if (!role) {
-				throw boom.notFound('Role not found');
-			}
+		return sequelize.transaction(async (transaction) => {
+			const deletedCount = await this.model.destroy({ where: { id }, transaction });
 
-			const deletedRole = await role.destroy({ transaction });
+			if (deletedCount === 0) throw boom.badImplementation('Failed to delete role: No rows affected');
 
-			if (!deletedRole) {
-				throw boom.badImplementation('Error deleting role');
-			}
-
-			await transaction.commit();
-			return { id: deletedRole.id };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return { id, message: 'Role deleted successfully' };
+		});
 	}
 
 	async find() {
 		const roles = await this.model.findAll();
 
-		if (!roles) {
-			throw boom.notFound('Roles not found');
-		}
+		if (roles.length === 0) throw boom.notFound('Roles not found');
+
 		return roles;
 	}
 
 	async findOne(id) {
-		const role = await this.model.findByPk(id);
+		const role = await this.model.findByPk(id, {
+			rejectOnEmpty: boom.notFound('Role not found'),
+		});
 
-		if (!role) {
-			throw boom.notFound('Role not found');
-		}
 		return role;
 	}
 }

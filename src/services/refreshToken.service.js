@@ -1,67 +1,57 @@
 const boom = require('@hapi/boom');
 const sequelize = require('@db');
+const { runInTransaction } = require('@utils/transaction.utils');
 
 class refreshTokenService {
 	constructor() {
-		this.refreshTokenService = sequelize.models.RefreshToken;
-		this.userService = sequelize.models.User;
+		this.refreshTokenModel = sequelize.models.RefreshToken;
+		this.userModel = sequelize.models.User;
 	}
 
-	async upsertRefreshToken(userId, token, transaction) {
-		const refreshToken = await this.refreshTokenService.upsert(
-			{
-				userId,
-				token,
-				expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
-			},
-			{ returning: true, conflictFields: ['userId'], transaction } // Actualiza si ya existe
-		);
+	async upsertRefreshToken(userId, token, transaction = null) {
+		return runInTransaction(async (t) => {
+			const [result] = await this.refreshTokenModel.upsert(
+				{
+					userId,
+					token,
+					expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7), // 7 days
+				},
+				{ returning: true, conflictFields: ['userId'], transaction: t } // Actualiza si ya existe
+			);
 
-		if (!refreshToken) {
-			throw boom.badImplementation('Error creating refresh token');
-		}
-
-		return refreshToken;
+			return result.get({ plain: true });
+		}, transaction);
 	}
 
 	async getTokensByUserId(userId) {
-		const refreshToken = await this.refreshTokenService.findOne({
+		const refreshToken = await this.refreshTokenModel.findOne({
 			where: { userId },
 			include: {
-				model: this.userService,
+				model: this.userModel,
 				as: 'user',
 				attributes: ['id', 'role_id'],
 			},
+			rejectOnEmpty: boom.notFound('Token not found'),
 		});
-
-		if (!refreshToken) {
-			throw boom.notFound('Token not found');
-		}
 
 		return refreshToken;
 	}
 
 	async deleteToken(userId) {
-		const transaction = await sequelize.transaction();
-
-		try {
-			const refreshToken = await this.refreshTokenService.findOne({
+		return sequelize.transaction(async (transaction) => {
+			const deletedCount = await this.refreshTokenModel.destroy({
 				where: { userId },
-				transaction,
+				transaction
 			});
 
-			if (!refreshToken) {
-				throw boom.notFound('Token not found');
-			}
+			if (deletedCount === 0) throw boom.notFound('Failed to delete token: No rows affected');
 
-			await refreshToken.destroy({ transaction });
 
-			await transaction.commit();
-			return { userId };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return {
+				id: userId,
+				message: 'Token revoked successfully'
+			};
+		});
 	}
 }
 

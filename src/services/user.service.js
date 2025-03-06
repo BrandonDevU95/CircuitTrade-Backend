@@ -1,186 +1,173 @@
 const boom = require('@hapi/boom');
 const sequelize = require('@db');
+const { runInTransaction } = require('@utils/transaction.utils');
 
 class UserService {
 	constructor() {
-		this.userService = sequelize.models.User;
-		this.companyService = sequelize.models.Company;
-		this.roleService = sequelize.models.Role;
+		this.userModel = sequelize.models.User;
+		this.companyModel = sequelize.models.Company;
+		this.roleModel = sequelize.models.Role;
 	}
 
-	async create(data, transaction) {
-		const { rfc, email, ...userData } = data;
+	async create(data, transaction = null) {
+		return runInTransaction(async (t) => {
+			const { rfc, email, ...userData } = data;
 
-		// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
-		const normalizedEmail = this.userService.normalizeEmail(email);
-		const normalizedRfc = rfc.toUpperCase();
-		const normalizedRoleName = this.roleService.normalizeName(userData.role);
+			// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
+			const normalizedEmail = this.userModel.normalizeEmail(email);
+			const normalizedRfc = rfc.toUpperCase();
+			const normalizedRoleName = this.roleModel.normalizeName(userData.role);
 
-		// Prevención de duplicados por email
-		const existingUser = await this.userService.findOne({
-			where: { email: normalizedEmail },
-			transaction,
-		});
-		if (existingUser) {
-			throw boom.badRequest('User already exists');
-		}
+			// Prevención de duplicados por email
+			const existingUser = await this.userModel.findOne({
+				where: { email: normalizedEmail },
+				transaction: t,
+			});
 
-		const company = await this.companyService.findOne({
-			where: { rfc: normalizedRfc },
-			transaction,
-		});
-		if (!company) {
-			throw boom.badRequest('Company not found');
-		}
+			if (existingUser) throw boom.badRequest('User already exists');
 
-		const role = await this.roleService.findOne({
-			where: { name: normalizedRoleName },
-			transaction,
-		});
+			const company = await this.companyModel.findOne({
+				where: { rfc: normalizedRfc },
+				transaction: t,
+				rejectOnEmpty: boom.notFound('Company not found')
+			});
 
-		if (!role) {
-			throw boom.badRequest('Role not found');
-		}
+			const role = await this.roleModel.findOne({
+				where: { name: normalizedRoleName },
+				transaction: t,
+				rejectOnEmpty: boom.notFound('Role not found')
+			});
 
-		const newUser = await this.userService.create(
-			{
-				...userData,
-				email: normalizedEmail,
-				companyId: company.id,
-				roleId: role.id,
-			},
-			{ transaction }
-		);
+			const newUser = await this.userModel.create(
+				{
+					...userData,
+					email: normalizedEmail,
+					companyId: company.id,
+					roleId: role.id,
+				},
+				{ transaction: t }
+			);
 
-		if (!newUser) {
-			throw boom.badImplementation('Error creating user');
-		}
-
-		// eslint-disable-next-line no-unused-vars
-		const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
-		return userWithoutPassword;
+			// eslint-disable-next-line no-unused-vars
+			const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
+			return userWithoutPassword;
+		}, transaction);
 	}
 
 	async update(id, data) {
-		const transaction = await sequelize.transaction();
-		try {
-			const user = await this.userService.findByPk(id, { transaction });
-
-			if (!user) {
-				throw boom.notFound('User not found');
-			}
+		return sequelize.transaction(async (transaction) => {
+			const user = await this.userModel.findByPk(id, { transaction, rejectOnEmpty: boom.notFound('User not found') });
 
 			// Se utiliza un objeto 'updateData' para procesar actualizaciones parciales
 			const updateData = { ...data };
 
 			// Solo se procesa la normalización y verificación de duplicados si 'email' está presente
-			if (updateData.email) {
-				const normalizedEmail = this.userService.normalizeEmail(updateData.email);
-				const existingUser = await this.userService.findOne({
-					where: { email: normalizedEmail },
-					transaction,
-				});
-				if (existingUser && existingUser.id !== id) {
-					throw boom.badRequest('Email already exists');
+			if ('email' in updateData) {
+				const normalizedEmail = this.userModel.normalizeEmail(updateData.email);
+
+				if (normalizedEmail !== user.email) {
+					const existingUser = await this.userModel.findOne({
+						where: { email: normalizedEmail },
+						transaction,
+					});
+
+					if (existingUser) throw boom.badRequest('User already exists');
+
+					updateData.email = normalizedEmail;
+				} else {
+					delete updateData.email;
 				}
-				updateData.email = normalizedEmail;
 			}
 
-			if (updateData.role) {
-				const normalizedRoleName = this.roleService.normalizeName(updateData.role);
-				const role = await this.roleService.findOne({
-					where: { name: normalizedRoleName },
-					transaction,
-				});
+			if ('role' in updateData) {
+				const normalizedRoleName = this.roleModel.normalizeName(updateData.role);
 
-				if (!role) {
-					throw boom.badRequest('Role not found');
+				if (normalizedRoleName !== user.role.name) {
+					const role = await this.roleModel.findOne({
+						where: { name: normalizedRoleName },
+						transaction,
+						rejectOnEmpty: boom.notFound('Role not found'),
+					});
+
+					updateData.roleId = role.id;
+					delete updateData.role;
+				} else {
+					delete updateData.role;
 				}
-				updateData.roleId = role.id;
-				delete updateData.role;
 			}
 
-			const updatedUser = await user.update(updateData, { transaction });
+			const [affectedCount] = await user.update(updateData, { transaction });
 
-			if (!updatedUser) {
-				throw boom.badImplementation('Error updating user');
-			}
+			if (affectedCount === 0) throw boom.badRequest('Failed to update user: No rows affected');
 
-			await transaction.commit();
-			return updatedUser;
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return user.reload({
+				transaction,
+				attributes: { exclude: ['password'] },
+				include: [
+					{
+						model: this.roleModel,
+						as: 'role',
+					},
+					{
+						model: this.companyModel,
+						as: 'company',
+					},
+				],
+			});
+		});
 	}
 
 	async delete(id) {
-		const transaction = await sequelize.transaction();
+		return sequelize.transaction(async (transaction) => {
+			const deletedCount = await this.userModel.destroy({ where: { id }, transaction });
 
-		try {
-			const user = await this.userService.findByPk(id, { transaction });
+			if (deletedCount === 0) throw boom.notFound('Failed to delete user: No rows affected');
 
-			if (!user) {
-				throw boom.notFound('User not found');
-			}
-
-			const deletedUser = await user.destroy({ transaction });
-
-			if (!deletedUser) {
-				throw boom.badImplementation('Error deleting user');
-			}
-
-			await transaction.commit();
-			return { id: deletedUser.id };
-		} catch (error) {
-			await transaction.rollback();
-			throw error;
-		}
+			return { id, message: 'User deleted successfully' };
+		});
 	}
 
 	async find() {
-		const users = await this.userService.findAll({
+		const users = await this.userModel.findAll({
 			attributes: { exclude: ['password'] },
 		});
 
-		if (!users) {
-			throw boom.notFound('Users not found');
-		}
+		if (users.length === 0) throw boom.notFound('Users not found');
+
 		return users;
 	}
 
 	async findOne(id) {
-		const user = await this.userService.findByPk(id, {
+		const user = await this.userModel.findByPk(id, {
 			attributes: { exclude: ['password'] },
 			include: [
 				{
-					model: this.roleService,
+					model: this.roleModel,
 					as: 'role',
 				},
 				{
-					model: this.companyService,
+					model: this.companyModel,
 					as: 'company',
 				},
 			],
+			rejectOnEmpty: boom.notFound('User not found'),
 		});
-		if (!user) {
-			throw boom.notFound('User not found');
-		}
+
 		return user;
 	}
 
 	async findByEmail(email) {
-		const normalizedEmail = this.userService.normalizeEmail(email);
+		return sequelize.transaction(async (transaction) => {
+			const normalizedEmail = this.userModel.normalizeEmail(email);
 
-		const user = await this.userService.findOne({
-			where: { email: normalizedEmail },
+			const user = await this.userModel.findOne({
+				where: { email: normalizedEmail },
+				transaction,
+				rejectOnEmpty: boom.notFound('User not found'),
+			});
+
+			return user;
 		});
-
-		if (!user) {
-			throw boom.notFound('User not found');
-		}
-
-		return user;
 	}
 }
 
