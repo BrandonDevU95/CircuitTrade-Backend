@@ -13,6 +13,10 @@ const config = {
 	jwtSecret: process.env.JWT_SECRET,
 	jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
 	bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT),
+	logs: {
+		logLevel: process.env.LOG_LEVEL || 'info',
+		logLevelConsole: process.env.LOG_LEVEL_CONSOLE || 'debug',
+	}
 };
 
 module.exports = { config };
