@@ -131,3 +131,6 @@ dist
 
 # MYSQL DATA
 mysql_data
+
+# LOGS WINSTON
+logs
