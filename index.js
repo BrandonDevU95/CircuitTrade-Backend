@@ -15,6 +15,9 @@ const { config } = require('@config/config');
 const routerApi = require('@routes');
 const configureCors = require('@middlewares/cors');
 const configureAuth = require('@auth');
+const { logger } = require('@logger');
+const morganLoggerHandler = require('@logger/middlewares/morgan.handler');
+const requestLoggerHandler = require('@logger/middlewares/request.handler');
 const {
 	logErrors,
 	ormErrorHandler,
@@ -55,6 +58,7 @@ const limiter = rateLimit({
 	max: 500, // limit each IP to 500 requests per windowMs
 	skip: (req) => req.path === "/health"
 });
+const appLogger = logger.injectContext('APP');
 
 // Settings (Ej: Nginx)
 app.set('trust proxy', 1);
@@ -64,6 +68,8 @@ app.use(express.json());
 app.use(cookieParser());
 app.use(helmet());
 app.use(limiter);
+app.use(requestLoggerHandler(logger));
+app.use(morganLoggerHandler(logger));
 configureCors(app);
 
 // Auth Strategies
@@ -92,16 +98,13 @@ app.use(errorHandler);
 
 // Server
 const server = app.listen(PORT, () => {
-	// eslint-disable-next-line no-console
-	console.log(`Server is running on port ${PORT}`);
+	appLogger.info(`Server is running on port ${PORT}`);
 });
 
 const shutdown = (signal) => {
-	// eslint-disable-next-line no-console
-	console.log(`${signal} signal received.`);
+	appLogger.info(`${signal} signal received. Closing server...`);
 	server.close(() => {
-		// eslint-disable-next-line no-console
-		console.log('Server closed');
+		appLogger.info('Server closed');
 		process.exit(0);
 	});
 }
