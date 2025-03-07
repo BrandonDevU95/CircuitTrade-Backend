@@ -69,7 +69,7 @@ app.use(cookieParser());
 app.use(helmet());
 app.use(limiter);
 app.use(requestLoggerHandler(logger));
-app.use(morganLoggerHandler(logger));
+app.use(morganLoggerHandler());
 configureCors(app);
 
 // Auth Strategies

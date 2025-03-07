@@ -1,31 +1,31 @@
 const morgan = require('morgan');
 
 // Función que recibe el logger y devuelve el middleware de Morgan
-const morganLoggerHandler = (logger) => {
+const morganLoggerHandler = () => {
     return morgan((tokens, req, res) => {
-        // Extraer correlationId inyectado por expressMiddleware, si existe.
-        const cleanUserAgent = (ua) => ua?.replace(/[^\w\s]/gi, '') || 'unknown'; // Previene log injection attacks
+        if (!req.logger) return null; // Fail-safe
 
-        const logData = {
-            ip: req.ip,
-            url: tokens.url(req, res),
-            status: tokens.status(req, res),
-            method: tokens.method(req, res),
-            userAgent: cleanUserAgent(req.headers['user-agent']),
-            contentLength: tokens.res(req, res, 'content-length'),
-            responseTime: tokens['response-time'](req, res) + 'ms',
-            message: `${tokens.method(req, res)} ${tokens.url(req, res)} ${tokens.status(req, res)} ${tokens['response-time'](req, res)}ms`,
-        };
+        // Sanitiza el User-Agent para evitar caracteres especiales
+        const cleanUserAgent = (ua) => ua?.replace(/[^\w\s]/gi, '') || 'unknown';
+        const shortId = req.shortCorrelationId;
 
-        // Se registra la solicitud HTTP en el nivel 'http'
-        logger.http('[HTTP Request]', {
+        req.logger.http(`HTTP Request: [${shortId}]`, {
             context: 'HTTP',
-            ...logData
+            http: {
+                method: tokens.method(req, res),
+                url: tokens.url(req, res),
+                status: Number(tokens.status(req, res)),
+                response_time: Number(tokens['response-time'](req, res)),
+                content_length: tokens.res(req, res, 'content-length'),
+                user_agent: cleanUserAgent(req.headers['user-agent'])
+            }
         });
 
-        return null; // Morgan no necesita retornar un string
+        // Morgan no necesita retornar un string
+        return null;
     }, {
-        stream: { write: () => { } } // Se deshabilita la salida por defecto de Morgan
+        // Se deshabilita la salida por defecto de Morgan
+        stream: { write: () => { } }
     });
 };
 
