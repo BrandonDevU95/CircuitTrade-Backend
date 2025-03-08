@@ -30,7 +30,7 @@ router.post(
 
 		res.cookie('access_token', accessToken, {
 			httpOnly: true,
-			secure: config.env === 'production',
+			secure: config.node.env === 'production',
 			sameSite: 'Strict',
 			maxAge: 1000 * 60 * 15, // 15 minutes
 		});
@@ -49,7 +49,7 @@ router.post('/sign-up', validatorHandler(signUpSchema, 'body'), async (req, res)
 
 	res.cookie('access_token', userData.accessToken, {
 		httpOnly: true,
-		secure: config.env === 'production',
+		secure: config.node.env === 'production',
 		sameSite: 'Strict',
 		maxAge: 1000 * 60 * 15, // 15 minutes
 	});

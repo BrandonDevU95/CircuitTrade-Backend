@@ -76,7 +76,7 @@ const baseTransports = transportConfigs.map(createRotatingTransport);
 
 // Transporte para consola (sin cambios)
 const consoleTransport = new transports.Console({
-    level: config.logs.logLevelConsole,
+    level: config.logs.console.level,
     format: format.combine(
         format.colorize(),
         format.printf(info => `[${info.timestamp}] ${info.level}: ${info.message}`)

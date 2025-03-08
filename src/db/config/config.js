@@ -5,17 +5,17 @@ const seqLogger = logger.injectContext('SEQUELIZE_CONFIG');
 
 module.exports = {
 	development: {
-		username: config.dbUser,
-		password: config.dbPassword,
-		database: config.dbName,
-		host: config.dbHost,
-		port: config.dbPort,
+		username: config.db.user,
+		password: config.db.password,
+		database: config.db.name,
+		host: config.db.host,
+		port: config.db.port,
 		dialect: 'mysql',
 		logging: (msg) => seqLogger.debug(msg),
-		ssl: config.env === 'production',
+		ssl: config.node.env === 'production',
 		dialectOptions: {
 			ssl: {
-				require: config.env === 'production',
+				require: config.node.env === 'production',
 				rejectUnauthorized: false,
 			},
 		},
@@ -27,19 +27,19 @@ module.exports = {
 		},
 	},
 	test: {
-		username: config.dbUser,
-		password: config.dbPassword,
-		database: config.dbName,
-		host: config.dbHost,
-		port: config.dbPort,
+		username: config.db.user,
+		password: config.db.password,
+		database: config.db.name,
+		host: config.db.host,
+		port: config.db.port,
 		dialect: 'mysql',
 	},
 	production: {
-		username: config.dbUser,
-		password: config.dbPassword,
-		database: config.dbName,
-		host: config.dbHost,
-		port: config.dbPort,
+		username: config.db.user,
+		password: config.db.password,
+		database: config.db.name,
+		host: config.db.host,
+		port: config.db.port,
 		dialect: 'mysql',
 		pool: {
 			max: 20, // Maximum number of connection in pool

@@ -11,7 +11,7 @@ addColors(customColors);
 // Creación y configuración del logger principal
 const logger = createLogger({
     levels: customLevels,
-    level: config.logs.logLevel,
+    level: config.logs.level,
     format: combine(
         errors({ stack: true }), // Captura el stack en errores
         timestamp({ format: 'YYYY-MM-DD HH:mm:ss.SSS' }), // Agrega marca de tiempo
@@ -29,11 +29,11 @@ const logger = createLogger({
 });
 
 // Transporte de Archivo Rotativo (solo si está activo)
-if (process.env.LOG_FILE_ENABLED === 'true') {
+if (config.logs.file.enabled === 'true') {
     baseTransports.forEach(transport => logger.add(transport));
 }
 
-if (process.env.LOG_CONSOLE_ENABLED === 'true') {
+if (config.logs.console.enabled === 'true') {
     logger.add(consoleTransport);
 }
 

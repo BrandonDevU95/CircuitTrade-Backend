@@ -16,7 +16,7 @@ function errorHandler(err, req, res) {
 	};
 
 	// Solo incluir el stack en desarrollo
-	if (config.env === 'development') {
+	if (config.node.env === 'development') {
 		errorLogger.debug(err.stack);
 		response.stack = err.stack;
 	}

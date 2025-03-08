@@ -2,7 +2,7 @@ const { Sequelize } = require('sequelize');
 const setupModels = require('./models');
 const { config } = require('@config/config');
 const { logger } = require('@logger');
-const env = config.env || 'development';
+const env = config.node.env || 'development';
 const connection = require('./config/config')[env];
 
 const sequelize = new Sequelize(connection.database, connection.username, connection.password, {

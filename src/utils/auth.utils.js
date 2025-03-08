@@ -13,7 +13,7 @@ const encryptPassword = async (password) => {
 	}
 
 	try {
-		return await bcrypt.hash(password, config.bcryptSaltRounds);
+		return await bcrypt.hash(password, config.bcrypt.saltRounds);
 	} catch (error) {
 		throw new Error(ERROR_MESSAGES.ENCRYPTION_FAILED, { cause: error });
 	}

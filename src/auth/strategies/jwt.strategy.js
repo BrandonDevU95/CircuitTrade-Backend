@@ -5,7 +5,7 @@ const boom = require('@hapi/boom');
 const { config } = require('@config/config');
 
 const options = {
-	secretOrKey: config.jwtSecret,
+	secretOrKey: config.jwt.secret,
 	jwtFromRequest: ExtractJwt.fromExtractors([
 		(req) => req.cookies.access_token,
 	]),

@@ -11,7 +11,7 @@ const rateLimit = require("express-rate-limit");
 
 
 // Custom modules
-const { config } = require('@config/config');
+const { config, requiredEnvVars } = require('@config/config');
 const routerApi = require('@routes');
 const configureCors = require('@middlewares/cors');
 const configureAuth = require('@auth');
@@ -26,32 +26,18 @@ const {
 	notFoundHandler,
 } = require('@middlewares/error.handler');
 
-// Check required environment variables
-const requiredEnvVars = [
-	'port',
-	'env',
-	'dbUser',
-	'dbPassword',
-	'dbHost',
-	'dbName',
-	'dbPort',
-	'jwtSecret',
-	'jwtRefreshSecret',
-	'bcryptSaltRounds',
-];
-
 requiredEnvVars.forEach((envVar) => {
-	if (!config[envVar]) {
+	if (!process.env[envVar]) {
 		throw new Error(`Missing ${envVar} environment variable`);
 	}
 });
 
-if (isNaN(config.bcryptSaltRounds) || config.bcryptSaltRounds < 1) {
+if (isNaN(config.bcrypt.saltRounds) || config.bcrypt.saltRounds < 1) {
 	throw new Error('Invalid BCRYPT_SALT environment variable');
 }
 
 // Constants
-const PORT = config.port;
+const PORT = config.node.port;
 const app = express();
 const limiter = rateLimit({
 	windowMs: 15 * 60 * 1000, // 15 minutes
@@ -79,8 +65,8 @@ configureAuth(app);
 app.get('/health', (req, res) => {
 	res.status(200).json({
 		status: 'OK',
-		version: config.version,
-		environment: config.env
+		version: config.node.version,
+		environment: config.node.env
 	});
 });
 
