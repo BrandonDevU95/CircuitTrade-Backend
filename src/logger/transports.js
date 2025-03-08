@@ -3,63 +3,69 @@ const { config } = require('@config/config');
 const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
 
-// Transportes basados en archivos con rotación diaria
-const baseTransports = [
-    new DailyRotateFile({
-        level: 'info',
-        filename: path.join('logs', 'info', 'info-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
+// Función generadora de transportes con rotación
+const createRotatingTransport = ({
+    level,
+    filename,
+    datePattern = 'YYYY-MM-DD',
+    maxFiles = '30d',
+    maxSize = '20m',
+    withLevelFilter = false
+}) => {
+    const baseConfig = {
+        level,
+        filename: path.join('logs', level.toLowerCase(), filename),
+        datePattern,
         zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '30d',
+        maxSize,
+        maxFiles,
         async: true,
-        maxParallelFiles: 2
-    }),
-    new DailyRotateFile({
+        maxParallelFiles: 2,
+        options: {
+            mode: 0o644,
+            flags: 'a'
+        },
+        format: withLevelFilter
+            ? format.combine(
+                format(info => info.level === level ? info : false)(),
+                format.json()
+            )
+            : format.json()
+    };
+
+    return new DailyRotateFile(baseConfig);
+};
+
+// Configuraciones comunes para los transportes
+const transportConfigs = [
+    {
         level: 'error',
-        filename: path.join('logs', 'error', 'errors-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '60d',
-        options: {
-            mode: 0o644,  // Permisos
-            flags: 'a'    // Modo de apertura
-        },
-        async: true,
-        maxParallelFiles: 2
-    }),
-    new DailyRotateFile({
+        filename: 'errors-%DATE%.log',
+        maxFiles: '60d'
+    },
+    {
+        level: 'info',
+        filename: 'info-%DATE%.log',
+        withLevelFilter: true
+    },
+    {
         level: 'http',
-        filename: path.join('logs', 'http', 'http-%DATE%.log'),
-        datePattern: 'YYYY-MM-DD',
-        zippedArchive: true,
-        maxSize: '20m',
-        maxFiles: '30d',
-        options: {
-            mode: 0o644,  // Permisos
-            flags: 'a'    // Modo de apertura
-        },
-        async: true,
-        maxParallelFiles: 2
-    }),
-    new DailyRotateFile({
+        filename: 'http-%DATE%.log',
+        withLevelFilter: true
+    },
+    {
         level: 'debug',
-        filename: path.join('logs', 'debug', 'debug-%DATE%.log'),
+        filename: 'debug-%DATE%.log',
         datePattern: 'YYYY-MM-DD-HH',
-        zippedArchive: true,
         maxSize: '50m',
-        maxFiles: '3d',
-        options: {
-            mode: 0o644,  // Permisos
-            flags: 'a'    // Modo de apertura
-        },
-        async: true,
-        maxParallelFiles: 2
-    })
+        maxFiles: '3d'
+    }
 ];
 
-// Transporte para la consola con salida colorizada
+// Generar todos los transportes
+const baseTransports = transportConfigs.map(createRotatingTransport);
+
+// Transporte para consola (sin cambios)
 const consoleTransport = new transports.Console({
     level: config.logs.logLevelConsole,
     format: format.combine(
