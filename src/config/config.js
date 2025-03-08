@@ -3,7 +3,7 @@ require('dotenv').config();
 const config = {
 	env: process.env.NODE_ENV || 'development',
 	port: process.env.PORT || 3000,
-	version: process.env.VERSION || '1.0.0',
+	version: process.env.VERSION,
 	dbUser: process.env.DB_USER,
 	dbPassword: process.env.DB_PASSWORD,
 	dbHost: process.env.DB_HOST,
@@ -14,8 +14,10 @@ const config = {
 	jwtRefreshSecret: process.env.JWT_REFRESH_SECRET,
 	bcryptSaltRounds: parseInt(process.env.BCRYPT_SALT),
 	logs: {
-		logLevel: process.env.LOG_LEVEL || 'info',
-		logLevelConsole: process.env.LOG_LEVEL_CONSOLE || 'debug',
+		logLevel: process.env.LOG_LEVEL || 'error', // Configura el nivel minimo de log
+		logLevelConsole: process.env.LOG_LEVEL_CONSOLE || 'error', // Configura el nivel minimo de log en consola
+		logConsoleEnabled: process.env.LOG_CONSOLE_ENABLED || false, // Habilita o deshabilita la salida de logs en consola
+		logFileEnabled: process.env.LOG_FILE_ENABLED || false, // Habilita o deshabilita la salida de logs en archivo
 	}
 };
 
