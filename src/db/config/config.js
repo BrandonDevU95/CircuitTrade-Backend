@@ -1,4 +1,7 @@
 const { config } = require('@config/config');
+const { logger } = require('@logger');
+
+const seqLogger = logger.injectContext('SEQUELIZE_CONFIG');
 
 module.exports = {
 	development: {
@@ -8,7 +11,7 @@ module.exports = {
 		host: config.dbHost,
 		port: config.dbPort,
 		dialect: 'mysql',
-		logging: console.log,
+		logging: (msg) => seqLogger.debug(msg),
 		ssl: config.env === 'production',
 		dialectOptions: {
 			ssl: {

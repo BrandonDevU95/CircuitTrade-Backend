@@ -1,6 +1,7 @@
 const { Sequelize } = require('sequelize');
 const setupModels = require('./models');
 const { config } = require('@config/config');
+const { logger } = require('@logger');
 const env = config.env || 'development';
 const connection = require('./config/config')[env];
 
@@ -14,23 +15,26 @@ const sequelize = new Sequelize(connection.database, connection.username, connec
 	dialectOptions: connection.dialectOptions,
 });
 
+const dbLogger = logger.injectContext('SEQUELIZE_DB');
+
 setupModels(sequelize);
 
 //No ejecutar en produccion ya que borra la base de datos
 if (env === 'development') {
 	sequelize
 		.sync({ force: false }) // false para no borrar la base de datos
-		.then(() => console.log('Database & tables created!'));
+		.then(() => dbLogger.info('Database synchronized'))
+		.catch((error) => dbLogger.error('An error occurred while synchronizing the database:', error));
 }
 
 //Health Checks
 sequelize
 	.authenticate()
 	.then(() => {
-		console.log('Connection has been established successfully.');
+		dbLogger.info('Connection has been established successfully.');
 	})
 	.catch((error) => {
-		console.error('Unable to connect to the database:', error);
+		dbLogger.error('Unable to connect to the database:', error);
 	});
 
 module.exports = sequelize;
