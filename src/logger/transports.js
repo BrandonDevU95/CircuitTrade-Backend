@@ -27,13 +27,22 @@ const createRotatingTransport = ({
         },
         format: withLevelFilter
             ? format.combine(
-                format(info => info.level === level ? info : false)(),
+                format((info) => {
+                    return info.level === level.toLowerCase() ? info : false;
+                })(),
                 format.json()
             )
             : format.json()
     };
 
-    return new DailyRotateFile(baseConfig);
+    const transport = new DailyRotateFile(baseConfig);
+
+    transport.on('error', (error) => {
+        // eslint-disable-next-line no-console
+        console.error(`Error en transporte ${level}:`, error);
+    });
+
+    return transport;
 };
 
 // Configuraciones comunes para los transportes

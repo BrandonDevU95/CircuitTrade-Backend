@@ -19,10 +19,7 @@ const logger = createLogger({
         secureFormat, // Filtra datos sensibles
         logFormatter // Formatea la salida en JSON
     ),
-    transports: [
-        ...baseTransports,
-        consoleTransport
-    ],
+    transports: [],
     exceptionHandlers: [
         new transports.File({ filename: 'logs/others/exceptions.log' })
     ],
@@ -30,6 +27,15 @@ const logger = createLogger({
         new transports.File({ filename: 'logs/others/rejections.log' })
     ]
 });
+
+// Transporte de Archivo Rotativo (solo si está activo)
+if (process.env.LOG_FILE_ENABLED === 'true') {
+    baseTransports.forEach(transport => logger.add(transport));
+}
+
+if (process.env.LOG_CONSOLE_ENABLED === 'true') {
+    logger.add(consoleTransport);
+}
 
 // Método para inyectar contexto en el logger (por ejemplo, para servicios específicos)
 logger.injectContext = (context) => {
