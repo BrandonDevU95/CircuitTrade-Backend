@@ -48,6 +48,7 @@ const limiter = rateLimit({
     skip: (req) => req.path === "/health"
 });
 const appLogger = logger.injectContext('APP');
+const dbLogger = logger.injectContext('DB');
 
 // Settings (Ej: Nginx)
 app.set('trust proxy', 1);
@@ -92,12 +93,12 @@ async function startServer() {
     try {
         // Paso 1: Autenticación con la base de datos (Health Check)
         await sequelize.authenticate();
-        appLogger.info('Connection to the database has been established successfully.');
+        dbLogger.info('Connection to the database has been established successfully.');
 
         // Paso 2: Sincronización solo en desarrollo
         if (config.node.env === 'development') {
             await sequelize.sync({ force: false });
-            appLogger.info('Database synchronized');
+            dbLogger.info('Database synchronized');
         }
 
         // Paso 3: Iniciar servidor HTTP
@@ -107,12 +108,12 @@ async function startServer() {
 
         // Paso 4: Manejadores de cierre
         const gracefulShutdown = async (signal) => {
-            appLogger.info(`Received ${signal}. Closing connections...`);
+            dbLogger.info(`Received ${signal}. Closing connections...`);
 
             try {
                 // Cerrar conexión de Sequelize
                 await sequelize.close();
-                appLogger.info('Database connection closed');
+                dbLogger.info('Database connection closed');
 
                 // Cerrar servidor HTTP
                 server.close(() => {
@@ -127,7 +128,7 @@ async function startServer() {
                 }, 5000);
 
             } catch (error) {
-                appLogger.error('Error during shutdown:', error);
+                dbLogger.error('Error during shutdown:', error);
                 process.exit(1);
             }
         };
@@ -137,7 +138,7 @@ async function startServer() {
         process.on('SIGINT', () => gracefulShutdown('SIGINT'));
 
     } catch (error) {
-        appLogger.error('Failed to initialize server:', error);
+        dbLogger.error('Failed to initialize server:', error);
         process.exit(1);
     }
 }
