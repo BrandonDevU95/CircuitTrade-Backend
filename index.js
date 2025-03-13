@@ -10,6 +10,7 @@ const cookieParser = require('cookie-parser');
 const rateLimit = require('express-rate-limit');
 
 // Custom modules
+const sequelize = require('./src/infrastructure/db');
 const { config, requiredEnvVars } = require('./src/infrastructure/config/env.config');
 const configureCors = require('./src/infrastructure/presentation/middleware/cors.handler');
 // const configureAuth = require('./src/infrastructure/auth');
@@ -26,7 +27,6 @@ const {
 
 // Cargar contenedor de dependencias y conexión a la DB
 const container = require('./src/infrastructure/config/container');
-const sequelize = require('./src/infrastructure/db/sequelize.config');
 
 // Validate required environment variables
 requiredEnvVars.forEach((envVar) => {
@@ -87,24 +87,59 @@ app.use(ormErrorHandler);
 app.use(boomErrorHandler);
 app.use(errorHandler);
 
-// Arranque de la aplicación
+// Server
 async function startServer() {
     try {
+        // Paso 1: Autenticación con la base de datos (Health Check)
         await sequelize.authenticate();
         appLogger.info('Connection to the database has been established successfully.');
-        app.listen(PORT, () => appLogger.info(`Server running on port ${PORT}`));
+
+        // Paso 2: Sincronización solo en desarrollo
+        if (config.node.env === 'development') {
+            await sequelize.sync({ force: false });
+            appLogger.info('Database synchronized');
+        }
+
+        // Paso 3: Iniciar servidor HTTP
+        const server = app.listen(PORT, () => {
+            appLogger.info(`Server running on port ${PORT}`);
+        });
+
+        // Paso 4: Manejadores de cierre
+        const gracefulShutdown = async (signal) => {
+            appLogger.info(`Received ${signal}. Closing connections...`);
+
+            try {
+                // Cerrar conexión de Sequelize
+                await sequelize.close();
+                appLogger.info('Database connection closed');
+
+                // Cerrar servidor HTTP
+                server.close(() => {
+                    appLogger.info('HTTP server closed');
+                    process.exit(0);
+                });
+
+                // Force close después de 5 segundos
+                setTimeout(() => {
+                    appLogger.error('Forcing shutdown...');
+                    process.exit(1);
+                }, 5000);
+
+            } catch (error) {
+                appLogger.error('Error during shutdown:', error);
+                process.exit(1);
+            }
+        };
+
+        // Capturar señales de terminación
+        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
+        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
+
     } catch (error) {
-        appLogger.error('Unable to connect to the database:', error);
+        appLogger.error('Failed to initialize server:', error);
         process.exit(1);
     }
 }
 
 startServer();
-
-// Manejadores para cerrar el servidor al recibir señales de terminación
-function shutdown(signal) {
-    appLogger.info(`Received ${signal}. Closing server...`);
-    process.exit(0);
-}
-process.on('SIGTERM', () => shutdown('SIGTERM'));
-process.on('SIGINT', () => shutdown('SIGINT'));
