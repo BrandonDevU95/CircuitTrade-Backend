@@ -11,7 +11,7 @@ const { FindAllUsersUseCase } = require('../../application/use-cases/users/find-
 // Controlador
 const { UserController } = require('../presentation/controllers/user.controller');
 // Importar instancia de Sequelize
-const sequelize = require('../../infrastructure/db/sequelize.config');
+const sequelize = require('../../infrastructure/db');
 
 const container = createContainer();
 

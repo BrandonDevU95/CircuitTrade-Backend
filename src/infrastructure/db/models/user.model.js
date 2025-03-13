@@ -1,68 +1,90 @@
-// Modelo Sequelize para la tabla "users". Sin lógica de negocio.
-module.exports = (sequelize, DataTypes) => {
-    const User = sequelize.define("User", {
-        id: {
-            allowNull: false,
-            autoIncrement: true,
-            primaryKey: true,
-            type: DataTypes.INTEGER,
-        },
-        name: {
-            allowNull: false,
-            type: DataTypes.STRING(100),
-            validate: { len: [3, 100] },
-        },
-        password: {
-            allowNull: false,
-            type: DataTypes.STRING(255),
-            validate: { len: [6, 255] },
-        },
-        email: {
-            allowNull: false,
-            type: DataTypes.STRING(100),
-            unique: true,
-        },
-        phone: {
-            allowNull: true,
-            type: DataTypes.STRING(15),
-            validate: { is: /^\+?[0-9]{7,15}$/ },
-        },
-        roleId: {
-            allowNull: false,
-            field: "role_id",
-            type: DataTypes.INTEGER,
-            references: { model: "roles", key: "id" },
-            onUpdate: "CASCADE",
-            onDelete: "RESTRICT",
-        },
-        companyId: {
-            allowNull: false,
-            field: "company_id",
-            type: DataTypes.INTEGER,
-            references: { model: "companies", key: "id" },
-            onUpdate: "CASCADE",
-            onDelete: "RESTRICT",
-        },
-        isActive: {
-            allowNull: false,
-            type: DataTypes.BOOLEAN,
-            defaultValue: true,
-        },
-    }, {
-        tableName: "users",
-        modelName: "User",
-        timestamps: true,
-        indexes: [
-            { unique: true, fields: ["email"] },
-            { fields: ["company_id"] }
-        ]
-    });
+const { Model, DataTypes } = require('sequelize');
 
-    User.associate = function (models) {
-        // User.belongsTo(models.Company, { as: "company", foreignKey: "companyId" });
-        // User.belongsTo(models.Role, { as: "role", foreignKey: "roleId" });
-        // User.hasOne(models.RefreshToken, { as: "refreshToken", foreignKey: "userId" });
-    };
+const USER_TABLE = 'users';
 
-    return User;
+const UserSchema = {
+    id: {
+        allowNull: false,
+        autoIncrement: true,
+        primaryKey: true,
+        type: DataTypes.INTEGER,
+    },
+    name: {
+        allowNull: false,
+        type: DataTypes.STRING(100),
+    },
+    password: {
+        allowNull: false,
+        type: DataTypes.STRING(255),
+    },
+    email: {
+        allowNull: false,
+        type: DataTypes.STRING(100),
+        unique: true,
+    },
+    phone: {
+        allowNull: true,
+        type: DataTypes.STRING(15),
+    },
+    roleId: {
+        allowNull: false,
+        field: 'role_id',
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'roles',
+            key: 'id',
+        },
+        onUpdate: 'CASCADE', // Si se actualiza el rol, se actualiza en cascada
+        onDelete: 'RESTRICT', // No eliminar roles si hay usuarios asociados
+    },
+    companyId: {
+        allowNull: false,
+        field: 'company_id',
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'companies',
+            key: 'id',
+            onUpdate: 'CASCADE', // Si se actualiza la empresa, se actualiza en cascada
+            onDelete: 'RESTRICT', // No eliminar empresas si hay usuarios asociados
+        },
+    },
+    isActive: {
+        allowNull: false,
+        type: DataTypes.BOOLEAN,
+        defaultValue: true,
+    },
 };
+
+class User extends Model {
+    static associate(models) {
+        this.belongsTo(models.Company, {
+            as: 'company',
+            foreignKey: 'companyId',
+        });
+        this.belongsTo(models.Role, { as: 'role', foreignKey: 'roleId' });
+        this.hasOne(models.RefreshToken, {
+            as: 'refreshToken',
+            foreignKey: 'userId',
+        });
+    }
+
+    static config(sequelize) {
+        return {
+            sequelize,
+            tableName: USER_TABLE,
+            modelName: 'User',
+            timestamps: true,
+            indexes: [
+                {
+                    unique: true,
+                    fields: ['email'],
+                },
+                {
+                    fields: ['company_id'],
+                },
+            ],
+        };
+    }
+}
+
+module.exports = { User, UserSchema, USER_TABLE };
