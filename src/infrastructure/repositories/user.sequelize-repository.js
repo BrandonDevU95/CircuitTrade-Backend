@@ -61,6 +61,7 @@ class UserSequelizeRepository extends IUserRepository {
     async findAll() {
         const users = await this.userModel.findAll({
             attributes: { exclude: ['password'] },
+            order: [['createdAt', 'DESC']],
         });
         if (!users || users.length === 0) {
             throw new Error('NO_USERS_FOUND');
