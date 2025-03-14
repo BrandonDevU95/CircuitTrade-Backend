@@ -17,7 +17,6 @@ const createUserSchema = Joi.object({
     rfc: rfc.required(),         // Si es parte del DTO, o reemplaza por roleId
     role: role.required(),         // Puedes optar por roleId en su lugar
     isActive: isActive.required(),
-    companyId: Joi.number().integer().required()
 });
 
 const updateUserSchema = Joi.object({
@@ -27,7 +26,6 @@ const updateUserSchema = Joi.object({
     phone,
     role,
     isActive,
-    companyId: Joi.number().integer()
 });
 
 const getUserSchema = Joi.object({
