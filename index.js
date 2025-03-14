@@ -75,9 +75,9 @@ app.get('/health', (req, res) => {
 });
 
 // Registrar rutas de usuarios usando el controlador inyectado desde el contenedor
-const { createUserRouter } = require('./src/infrastructure/presentation/routes/users.routes');
+const { userRouter } = require('./src/infrastructure/presentation/routes/users.routes');
 const userController = container.resolve('userController');
-app.use('/users', createUserRouter({ userController }));
+app.use('/users', userRouter({ userController }));
 
 // 404 Handler
 app.use(notFoundHandler);

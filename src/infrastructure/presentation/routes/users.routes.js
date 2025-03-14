@@ -2,7 +2,7 @@ const express = require('express');
 const validatorHandler = require('../middleware/validator.handler'); // Asegúrate de implementarlo
 const { createUserSchema, updateUserSchema, getUserSchema } = require('../validators/user.schema');
 
-function createUserRouter({ userController }) {
+function userRouter({ userController }) {
     const router = express.Router();
 
     router.get('/', (req, res, next) => userController.getAllUsers(req, res, next));
@@ -25,4 +25,4 @@ function createUserRouter({ userController }) {
     return router;
 }
 
-module.exports = { createUserRouter };
+module.exports = { userRouter };
