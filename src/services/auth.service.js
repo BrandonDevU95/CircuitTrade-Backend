@@ -1,13 +1,14 @@
-const UserService = require('./user.service');
-const CompanyService = require('./company.service');
-const RefreshTokenService = require('./refreshToken.service');
-const JWTManager = require('@utils/jwt.utils');
-const boom = require('@hapi/boom');
-const { verifyPassword } = require('@utils/auth.utils');
 const sequelize = require('@db');
+const boom = require('@hapi/boom');
+const UserService = require('./user.service');
+const TokenService = require('./token.service');
+const CompanyService = require('./company.service');
+const { verifyPassword } = require('@utils/auth.utils');
+const RefreshTokenService = require('./refreshToken.service');
 class AuthService {
 	constructor() {
 		this.userService = new UserService();
+		this.tokenService = new TokenService();
 		this.companyService = new CompanyService();
 		this.refreshTokenService = new RefreshTokenService();
 	}
@@ -42,13 +43,7 @@ class AuthService {
 				{ ...userData, rfc: company.rfc }, // Envía el RFC de la empresa
 				transaction
 			);
-
-			const accessToken = JWTManager.generateAccessToken(user);
-			const refreshToken = JWTManager.generateRefreshToken(user);
-
-			if (!accessToken || !refreshToken) {
-				throw boom.badImplementation('Error generating tokens');
-			}
+			const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
 
 			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, transaction);
 
@@ -58,3 +53,4 @@ class AuthService {
 }
 
 module.exports = AuthService;
+3511193954
