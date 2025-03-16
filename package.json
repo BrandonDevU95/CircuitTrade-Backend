@@ -75,6 +75,7 @@
 		"@middlewares": "src/middlewares",
 		"@routes": "src/routes",
 		"@schemas": "src/schemas",
+		"@controllers": "src/controllers",
 		"@services": "src/services",
 		"@utils": "src/utils",
 		"@logger": "src/logger"
