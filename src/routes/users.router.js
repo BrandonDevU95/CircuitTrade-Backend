@@ -1,45 +1,23 @@
 const express = require('express');
-const userService = require('@services/user.service');
+const UserService = require('@services/user.service');
+const UserController = require('@controllers/user.controller');
 const validatorHandler = require('@middlewares/validator.handler');
 
 const { createUserSchema, updateUserSchema, getUserSchema } = require('@schemas/user.schema');
 
 const router = express.Router();
-const service = new userService();
+const service = new UserService();
+const controller = new UserController(service);
 
-router.get('/', async (req, res) => {
-	const users = await service.find();
-	res.json(users);
-});
-
-router.get('/:id', validatorHandler(getUserSchema, 'params'), async (req, res) => {
-	const { id } = req.params;
-	const user = await service.findOne(id);
-	res.json(user);
-});
-
-router.post('/', validatorHandler(createUserSchema, 'body'), async (req, res, next) => {
-	const body = req.body;
-	const newUser = await service.create(body);
-	res.status(201).json(newUser);
-});
-
+router.get('/', controller.getUsers.bind(controller));
+router.get('/:id', validatorHandler(getUserSchema, 'params'), controller.getUser.bind(controller));
+router.post('/', validatorHandler(createUserSchema, 'body'), controller.createUser.bind(controller));
 router.patch(
 	'/:id',
 	validatorHandler(getUserSchema, 'params'),
 	validatorHandler(updateUserSchema, 'body'),
-	async (req, res) => {
-		const { id } = req.params;
-		const body = req.body;
-		const updatedUser = await service.update(id, body);
-		res.json(updatedUser);
-	}
+	controller.updateUser.bind(controller)
 );
-
-router.delete('/:id', validatorHandler(getUserSchema, 'params'), async (req, res) => {
-	const { id } = req.params;
-	const deletedUser = await service.delete(id);
-	res.json(deletedUser);
-});
+router.delete('/:id', validatorHandler(getUserSchema, 'params'), controller.deleteUser.bind(controller));
 
 module.exports = router;

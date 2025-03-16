@@ -1,6 +1,7 @@
 const express = require('express');
 const CompanyService = require('@services/company.service');
 const validatorHandler = require('@middlewares/validator.handler');
+const CompanyController = require('@controllers/company.controller');
 const {
 	createCompanySchema,
 	updateCompanySchema,
@@ -9,40 +10,12 @@ const {
 
 const router = express.Router();
 const service = new CompanyService();
+const controller = new CompanyController(service);
 
-router.get('/', async (req, res) => {
-	const companies = await service.find();
-	res.json(companies);
-});
-
-router.get('/:id', validatorHandler(getCompanySchema, 'params'), async (req, res) => {
-	const { id } = req.params;
-	const company = await service.findOne(id);
-	res.json(company);
-});
-
-router.post('/', validatorHandler(createCompanySchema, 'body'), async (req, res, next) => {
-	const body = req.body;
-	const newCompany = await service.create(body);
-	res.status(201).json(newCompany);
-});
-
-router.patch(
-	'/:id',
-	validatorHandler(getCompanySchema, 'params'),
-	validatorHandler(updateCompanySchema, 'body'),
-	async (req, res) => {
-		const { id } = req.params;
-		const body = req.body;
-		const updatedCompany = await service.update(id, body);
-		res.json(updatedCompany);
-	}
-);
-
-router.delete('/:id', validatorHandler(getCompanySchema, 'params'), async (req, res) => {
-	const { id } = req.params;
-	const deletedCompany = await service.delete(id);
-	res.json(deletedCompany);
-});
+router.get('/', controller.getCompanies.bind(controller));
+router.get('/:id', validatorHandler(getCompanySchema, 'params'), controller.getCompany.bind(controller));
+router.post('/', validatorHandler(createCompanySchema, 'body'), controller.createCompany.bind(controller));
+router.patch('/:id', validatorHandler(getCompanySchema, 'params'), validatorHandler(updateCompanySchema, 'body'), controller.updateCompany.bind(controller));
+router.delete('/:id', validatorHandler(getCompanySchema, 'params'), controller.deleteCompany.bind(controller));
 
 module.exports = router;
