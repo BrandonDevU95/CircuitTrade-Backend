@@ -15,22 +15,20 @@ class CompanyController {
     }
 
     async createCompany(req, res) {
-        const body = req.body;
-        const newCompany = await this.service.create(body);
-        res.status(201).json(newCompany);
+        const company = await this.service.create(req.body);
+        res.status(201).json(company);
     }
 
     async updateCompany(req, res) {
         const { id } = req.params;
-        const body = req.body;
-        const updatedCompany = await this.service.update(id, body);
-        res.json(updatedCompany);
+        const company = await this.service.update(id, req.body);
+        res.json(company);
     }
 
     async deleteCompany(req, res) {
         const { id } = req.params;
-        const deletedCompany = await this.service.delete(id);
-        res.json(deletedCompany);
+        const result = await this.service.delete(id);
+        res.json(result);
     }
 }
 

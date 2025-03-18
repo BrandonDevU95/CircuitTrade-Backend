@@ -1,131 +1,89 @@
 const boom = require('@hapi/boom');
-const sequelize = require('@db');
+const CompanyDTO = require('@dtos/company.dto');
+const CompanyEntity = require('@entities/company.entity');
 const { runInTransaction } = require('@utils/transaction.utils');
 
 class CompanyService {
-	constructor() {
-		this.companyModel = sequelize.models.Company;
-		this.userModel = sequelize.models.User;
+	constructor(companyRepo, userRepo) {
+		this.companyRepo = companyRepo;
+		this.userRepo = userRepo;
+	}
+
+
+	async find() {
+		const companies = await this.companyRepo.find();
+
+		if (companies.length === 0) throw boom.notFound('Companies not found');
+
+		return companies.map(c => CompanyDTO.fromDatabase(c));
+	}
+
+	async findOne(id) {
+		const company = await this.companyRepo.findById(id, {
+			include: ['users'],
+		});
+
+		return CompanyDTO.fromDatabase(company);
 	}
 
 	async create(data, transaction = null) {
 		return runInTransaction(async (t) => {
-			// Se usa la función helper para normalizar los campos
-			const normalizedRfc = this.companyModel.normalizeRfc(data.rfc);
-			const normalizedEmail = this.companyModel.normalizeEmail(data.email);
+			const entity = new CompanyEntity(data);
 
-			// Verificación de duplicados para RFC
-			const existing = await this.companyModel.findOne({
+			const existing = await this.companyRepo.find({
 				where: {
-					[sequelize.Op.or]: [
-						{ rfc: normalizedRfc },
-						{ email: normalizedEmail },
-					],
+					[this.companyRepo.model.sequelize.Op.or]: [
+						{ rfc: entity._normalized.rfc },
+						{ email: entity._normalized.email }
+					]
 				},
 				transaction: t,
 			});
 
-			if (existing) {
-				if (existing.rfc === normalizedRfc) throw boom.conflict('Company already exists with this RFC');
-				if (existing.email === normalizedEmail) throw boom.conflict('Company already exists with this email');
-			}
-			// Preparar datos con campos normalizados
-			const companyData = {
-				...data,
-				rfc: normalizedRfc,
-				email: normalizedEmail,
-			};
-
-			return this.companyModel.create(companyData, {
-				transaction: t,
-			})
+			entity.validateUniqueness(existing[0]);
+			const companyData = entity.prepareForCreate();
+			const newCompany = await this.companyRepo.create(companyData, { transaction: t });
+			return CompanyDTO.fromDatabase(newCompany);
 		}, transaction);
 	}
 
-	async update(id, data) {
-		return sequelize.transaction(async (transaction) => {
-			const company = await this.companyModel.findByPk(id, { transaction, rejectOnEmpty: boom.notFound('Company not found') });
+	async update(id, data, transaction = null) {
+		return runInTransaction(async (t) => {
+			const entity = new CompanyEntity(data);
+			const updateData = entity.prepareForUpdate(data);
+			if (updateData.rfc || updateData.email) {
+				const whereClause = { [this.companyRepo.model.sequelize.Op.or]: [] };
+				if (updateData.rfc) whereClause[this.companyRepo.model.sequelize.Op.or].push({ rfc: updateData.rfc });
+				if (updateData.email) whereClause[this.companyRepo.model.sequelize.Op.or].push({ email: updateData.email });
 
-			// Manejo condicional para actualizar campos de forma segura en actualizaciones parciales
-			const updateData = { ...data };
-
-			if ('rfc' in updateData) {
-				const normalizedRfc = this.companyModel.normalizeRfc(updateData.rfc);
-
-				if (normalizedRfc !== company.rfc) {
-					// Verifica duplicados para RFC si se intenta cambiar
-					const existingCompany = await this.companyModel.findOne({
-						where: { rfc: normalizedRfc },
-						transaction,
-					});
-
-					if (existingCompany) throw boom.conflict('Company already exists with this RFC');
-
-					updateData.rfc = normalizedRfc;
-				} else {
-					delete updateData.rfc;
-				}
+				const existing = await this.companyRepo.find({ where: whereClause, transaction: t });
+				entity.validateUniqueness(existing[0]);
 			}
 
-			if ('email' in updateData) {
-				const normalizedEmail = this.companyModel.normalizeEmail(updateData.email);
-
-				if (normalizedEmail !== company.email) {
-					const existingCompanyEmail = await this.companyModel.findOne({
-						where: { email: normalizedEmail },
-						transaction,
-					});
-
-					if (existingCompanyEmail) throw boom.conflict('Company already exists with this email');
-
-					updateData.email = normalizedEmail;
-				} else {
-					delete updateData.email;
-				}
-
-			}
-
-			const [affectedCount] = await company.update(updateData, {
-				transaction,
+			const { affectedCount } = await this.companyRepo.update(id, updateData, {
+				transaction: t,
+				returning: true,
+				individualHooks: true
 			});
 
-			if (affectedCount === 0) throw boom.badImplementation('Failed to update company: No rows affected');
+			if (affectedCount === 0) throw boom.notFound('Company not found');
 
-			return company.reload({ transaction });
-		});
+			const updatedCompany = await this.companyRepo.findById(id, { transaction: t });
+			return CompanyDTO.fromDatabase(updatedCompany);
+		}, transaction);
 	}
 
-	async delete(id) {
-		return sequelize.transaction(async (transaction) => {
-			const users = await this.userModel.findAll({
-				where: { companyId: id },
-				transaction,
-			});
+	async delete(id, transaction = null) {
+		return runInTransaction(async (t) => {
+			const users = await this.userRepo.find({ where: { companyId: id }, transaction: t });
 
 			if (users.length > 0) throw boom.badRequest('Cannot delete company with associated users');
 
-			const deletedCount = await this.companyModel.destroy({ where: { id }, transaction });
-
-			if (deletedCount === 0) throw boom.notFound('Failed to delete company: No rows affected');
+			const companyDeleted = await this.companyRepo.delete(id, { transaction: t });
+			if (companyDeleted === 0) throw boom.notFound('Failed to delete company: No rows affected');
 
 			return { id, message: 'Company deleted successfully' };
-		});
-	}
-
-	async find() {
-		const companies = await this.companyModel.findAll();
-
-		if (companies.length === 0) throw boom.notFound('Companies not found');
-
-		return companies;
-	}
-
-	async findOne(id) {
-		const company = await this.companyModel.findByPk(id, {
-			rejectOnEmpty: boom.notFound('Company not found'),
-		});
-
-		return company;
+		}, transaction);
 	}
 }
 

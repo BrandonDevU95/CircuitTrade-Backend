@@ -8,8 +8,10 @@ const CompanyRepository = require("@repositories/company.repository");
 const RoleRepository = require("@repositories/role.repository");
 //Services
 const UserService = require("@services/user.service");
+const CompanyService = require("@services/company.service");
 //Controllers
 const UserController = require("@controllers/user.controller");
+const CompanyController = require("@controllers/company.controller");
 
 const container = createContainer();
 
@@ -40,8 +42,15 @@ container.register({
         companyRepo: container.resolve("companyRepo"),
         roleRepo: container.resolve("roleRepo"),
     })),
+    companyService: asClass(CompanyService).inject(() => ({
+        companyRepo: container.resolve("companyRepo"),
+        userRepo: container.resolve("userRepo"),
+    })),
     userController: asClass(UserController).inject(() => ({
         userService: container.resolve("userService"),
+    })),
+    companyController: asClass(CompanyController).inject(() => ({
+        companyService: container.resolve("companyService"),
     })),
 });
 
