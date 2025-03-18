@@ -76,8 +76,11 @@
 		"@routes": "src/routes",
 		"@schemas": "src/schemas",
 		"@controllers": "src/controllers",
+		"@repositories": "src/repositories",
+		"@entities": "src/entities",
 		"@services": "src/services",
 		"@utils": "src/utils",
+		"@dtos": "src/dtos",
 		"@logger": "src/logger"
 	}
 }
