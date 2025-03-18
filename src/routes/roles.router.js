@@ -1,17 +1,14 @@
 const express = require('express');
-
-const RoleService = require('@services/role.service');
+const container = require('@config/container');
 const validatorHandler = require('@middlewares/validator.handler');
-const RoleController = require('@controllers/role.controller');
 const {
 	createRoleSchema,
 	updateRoleSchema,
 	getRoleSchema,
 } = require('@schemas/role.schema');
-
 const router = express.Router();
-const service = new RoleService();
-const controller = new RoleController(service);
+
+const controller = container.resolve('roleController');
 
 router.get('/', controller.getRoles.bind(controller));
 router.get('/:id', validatorHandler(getRoleSchema, 'params'), controller.getRole.bind(controller));

@@ -15,22 +15,20 @@ class RoleController {
     }
 
     async createRole(req, res) {
-        const body = req.body;
-        const newRole = await this.service.create(body);
-        res.status(201).json(newRole);
+        const role = await this.service.create(req.body);
+        res.status(201).json(role);
     }
 
     async updateRole(req, res) {
         const { id } = req.params;
-        const body = req.body;
-        const updatedRole = await this.service.update(id, body);
-        res.json(updatedRole);
+        const role = await this.service.update(id, req.body);
+        res.json(role);
     }
 
     async deleteRole(req, res) {
         const { id } = req.params;
-        await this.service.delete(id);
-        res.status(204).end();
+        const result = await this.service.delete(id);
+        res.json(result);
     }
 }
 
