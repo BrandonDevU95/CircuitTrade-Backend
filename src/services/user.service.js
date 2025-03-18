@@ -98,9 +98,9 @@ class UserService {
 
 	async delete(id, transaction = null) {
 		return runInTransaction(async (t) => {
-			const deletedCount = await this.userRepo.delete(id, { transaction: t });
+			const userDeleted = await this.userRepo.delete(id, { transaction: t });
 
-			if (deletedCount === 0) throw boom.notFound('Failed to delete user: No rows affected');
+			if (userDeleted === 0) throw boom.notFound('Failed to delete user: No rows affected');
 
 			return { id, message: 'User deleted successfully' };
 		}, transaction);

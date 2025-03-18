@@ -28,11 +28,11 @@ class BaseRepository {
     }
 
     async delete(id, options = {}) {
-        await this.model.destroy({
+        const userDeleted = await this.model.destroy({
             where: { id },
             ...options,
         });
-        return { id };
+        return userDeleted;
     }
 }
 
