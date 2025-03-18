@@ -1,173 +1,118 @@
 const boom = require('@hapi/boom');
-const sequelize = require('@db');
+const UserDTO = require('@dtos/user.dto');
+const UserEntity = require('@entities/user.entity');
 const { runInTransaction } = require('@utils/transaction.utils');
 
 class UserService {
-	constructor() {
-		this.userModel = sequelize.models.User;
-		this.companyModel = sequelize.models.Company;
-		this.roleModel = sequelize.models.Role;
-	}
-
-	async create(data, transaction = null) {
-		return runInTransaction(async (t) => {
-			const { rfc, email, ...userData } = data;
-
-			// Se utiliza el método helper 'normalizeEmail' para obtener el email normalizado
-			const normalizedEmail = this.userModel.normalizeEmail(email);
-			const normalizedRfc = rfc.toUpperCase();
-			const normalizedRoleName = this.roleModel.normalizeName(userData.role);
-
-			// Prevención de duplicados por email
-			const existingUser = await this.userModel.findOne({
-				where: { email: normalizedEmail },
-				transaction: t,
-			});
-
-			if (existingUser) throw boom.badRequest('User already exists');
-
-			const company = await this.companyModel.findOne({
-				where: { rfc: normalizedRfc },
-				transaction: t,
-				rejectOnEmpty: boom.notFound('Company not found')
-			});
-
-			const role = await this.roleModel.findOne({
-				where: { name: normalizedRoleName },
-				transaction: t,
-				rejectOnEmpty: boom.notFound('Role not found')
-			});
-
-			const newUser = await this.userModel.create(
-				{
-					...userData,
-					email: normalizedEmail,
-					companyId: company.id,
-					roleId: role.id,
-				},
-				{ transaction: t }
-			);
-
-			// eslint-disable-next-line no-unused-vars
-			const { password, ...userWithoutPassword } = newUser.toJSON(); // Destructuring
-			return userWithoutPassword;
-		}, transaction);
-	}
-
-	async update(id, data) {
-		return sequelize.transaction(async (transaction) => {
-			const user = await this.userModel.findByPk(id, { transaction, rejectOnEmpty: boom.notFound('User not found') });
-
-			// Se utiliza un objeto 'updateData' para procesar actualizaciones parciales
-			const updateData = { ...data };
-
-			// Solo se procesa la normalización y verificación de duplicados si 'email' está presente
-			if ('email' in updateData) {
-				const normalizedEmail = this.userModel.normalizeEmail(updateData.email);
-
-				if (normalizedEmail !== user.email) {
-					const existingUser = await this.userModel.findOne({
-						where: { email: normalizedEmail },
-						transaction,
-					});
-
-					if (existingUser) throw boom.badRequest('User already exists');
-
-					updateData.email = normalizedEmail;
-				} else {
-					delete updateData.email;
-				}
-			}
-
-			if ('role' in updateData) {
-				const normalizedRoleName = this.roleModel.normalizeName(updateData.role);
-
-				if (normalizedRoleName !== user.role.name) {
-					const role = await this.roleModel.findOne({
-						where: { name: normalizedRoleName },
-						transaction,
-						rejectOnEmpty: boom.notFound('Role not found'),
-					});
-
-					updateData.roleId = role.id;
-					delete updateData.role;
-				} else {
-					delete updateData.role;
-				}
-			}
-
-			const [affectedCount] = await user.update(updateData, { transaction });
-
-			if (affectedCount === 0) throw boom.badRequest('Failed to update user: No rows affected');
-
-			return user.reload({
-				transaction,
-				attributes: { exclude: ['password'] },
-				include: [
-					{
-						model: this.roleModel,
-						as: 'role',
-					},
-					{
-						model: this.companyModel,
-						as: 'company',
-					},
-				],
-			});
-		});
-	}
-
-	async delete(id) {
-		return sequelize.transaction(async (transaction) => {
-			const deletedCount = await this.userModel.destroy({ where: { id }, transaction });
-
-			if (deletedCount === 0) throw boom.notFound('Failed to delete user: No rows affected');
-
-			return { id, message: 'User deleted successfully' };
-		});
+	constructor(userRepo, companyRepo, roleRepo) {
+		this.userRepo = userRepo;
+		this.companyRepo = companyRepo;
+		this.roleRepo = roleRepo;
 	}
 
 	async find() {
-		const users = await this.userModel.findAll({
-			attributes: { exclude: ['password'] },
+		const users = await this.userRepo.findUsersSafe({
+			order: [['createdAt', 'DESC']],
 		});
 
 		if (users.length === 0) throw boom.notFound('Users not found');
 
-		return users;
+		return users
 	}
 
 	async findOne(id) {
-		const user = await this.userModel.findByPk(id, {
-			attributes: { exclude: ['password'] },
-			include: [
-				{
-					model: this.roleModel,
-					as: 'role',
-				},
-				{
-					model: this.companyModel,
-					as: 'company',
-				},
-			],
-			rejectOnEmpty: boom.notFound('User not found'),
-		});
+		const user = await this.userRepo.findUserByIdWithDetails(id);
 
-		return user;
+		return UserDTO.fromDatabase(user);
 	}
 
-	async findByEmail(email) {
-		return sequelize.transaction(async (transaction) => {
-			const normalizedEmail = this.userModel.normalizeEmail(email);
+	async create(data, transaction = null) {
+		return runInTransaction(async (t) => {
+			const userEntity = new UserEntity(data);
 
-			const user = await this.userModel.findOne({
-				where: { email: normalizedEmail },
-				transaction,
-				rejectOnEmpty: boom.notFound('User not found'),
-			});
+			// Prevención de duplicados por email
+			const existingUser = await this.userRepo.findUserByEmail(
+				userEntity._normalized.email,
+				{ transaction: t }
+			);
 
-			return user;
-		});
+			userEntity.validateUniqueness(existingUser);
+
+			const company = await this.companyRepo.findCompanyByRfc(
+				userEntity._normalized.rfc,
+				{ transaction: t }
+			);
+			const role = await this.roleRepo.findRoleByName(
+				userEntity._normalized.role,
+				{ transaction: t }
+			);
+
+			const userPayload = {
+				...await userEntity.prepareForCreate(),
+				companyId: company.id,
+				roleId: role.id
+			};
+
+			const newUser = await this.userRepo.create(userPayload, { transaction: t });
+
+			return UserDTO.fromDatabase(newUser);
+		}, transaction);
+	}
+
+	async update(id, data, transaction = null) {
+		return runInTransaction(async (t) => {
+			const userEntity = new UserEntity(data);
+			const updatePayload = await userEntity.prepareForUpdate(data);
+
+			// Validar email si aplica
+			if (updatePayload.email) {
+				const existingUser = await this.userRepo.findUserByEmail(
+					updatePayload.email,
+					{ transaction: t }
+				);
+
+				if (existingUser && existingUser.id !== id) {
+					userEntity.validateUniqueness(existingUser);
+				}
+			}
+
+			// Actualizar rol si aplica
+			if (updatePayload.role) {
+				const role = await this.roleRepo.findRoleByName(
+					userEntity._normalized.role,
+					{ transaction: t }
+				);
+				updatePayload.roleId = role.id;
+				delete updatePayload.role;
+			}
+
+			const { affectedCount } = await this.userRepo.update(id, updatePayload, { transaction: t });
+
+			if (affectedCount === 0) return { id, message: 'User not updated' };
+
+			const updatedUser = await this.userRepo.findUserByIdWithDetails(id, { transaction: t });
+
+			return UserDTO.fromDatabase(updatedUser);
+		}, transaction);
+	}
+
+	async delete(id, transaction = null) {
+		return runInTransaction(async (t) => {
+			const deletedCount = await this.userRepo.delete(id, { transaction: t });
+
+			if (deletedCount === 0) throw boom.notFound('Failed to delete user: No rows affected');
+
+			return { id, message: 'User deleted successfully' };
+		}, transaction);
+	}
+
+	async findByEmail(email, transaction = null) {
+		return runInTransaction(async (t) => {
+			const userEntity = new UserEntity({ email });
+			const user = await this.userRepo.findUserByEmail(userEntity._normalized.email, { transaction: t });
+
+			return UserDTO.fromDatabase(user);
+		}, transaction);
 	}
 }
 

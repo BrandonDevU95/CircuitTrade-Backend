@@ -1,12 +1,20 @@
 const express = require('express');
+const sequelize = require('@db');
 const UserService = require('@services/user.service');
 const UserController = require('@controllers/user.controller');
 const validatorHandler = require('@middlewares/validator.handler');
+const UserRepository = require('@repositories/user.repository');
+const CompanyRepository = require('@repositories/company.repository');
+const RoleRepository = require('@repositories/role.repository');
 
 const { createUserSchema, updateUserSchema, getUserSchema } = require('@schemas/user.schema');
 
+const userRepo = new UserRepository(sequelize.models.User);
+const companyRepo = new CompanyRepository(sequelize.models.Company);
+const roleRepo = new RoleRepository(sequelize.models.Role);
+
 const router = express.Router();
-const service = new UserService();
+const service = new UserService(userRepo, companyRepo, roleRepo);
 const controller = new UserController(service);
 
 router.get('/', controller.getUsers.bind(controller));
