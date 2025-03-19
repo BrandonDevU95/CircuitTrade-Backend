@@ -1,6 +1,6 @@
 class UserController {
-    constructor(service) {
-        this.service = service;
+    constructor({ userService }) {
+        this.service = userService;
     }
 
     async getUsers(req, res) {

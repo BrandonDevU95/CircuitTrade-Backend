@@ -1,6 +1,6 @@
 class CompanyController {
-    constructor(service) {
-        this.service = service;
+    constructor({ companyService }) {
+        this.service = companyService;
     }
 
     async getCompanies(req, res) {

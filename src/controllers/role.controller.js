@@ -1,6 +1,6 @@
 class RoleController {
-    constructor(service) {
-        this.service = service;
+    constructor({ roleService }) {
+        this.service = roleService;
     }
 
     async getRoles(req, res) {
