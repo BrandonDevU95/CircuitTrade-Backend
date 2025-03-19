@@ -1,7 +1,7 @@
 const boom = require('@hapi/boom');
 
 class BaseRepository {
-    constructor(model) {
+    constructor({ model }) {
         this.model = model;
     }
 

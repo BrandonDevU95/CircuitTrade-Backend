@@ -2,8 +2,8 @@ const boom = require('@hapi/boom');
 const BaseRepository = require('./base.repository');
 
 class UserRepository extends BaseRepository {
-    constructor(UserModel) {
-        super(UserModel);
+    constructor({ model }) {
+        super({ model });
     }
 
     async findUsersSafe(options = {}) {

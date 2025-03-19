@@ -1,8 +1,8 @@
 const BaseRepository = require('./base.repository');
 
 class RoleRepository extends BaseRepository {
-    constructor(RoleModel) {
-        super(RoleModel);
+    constructor({ model }) {
+        super({ model });
     }
 
     async findRoleByName(name, options = {}) {

@@ -2,8 +2,8 @@ const boom = require('@hapi/boom');
 const BaseRepository = require('./base.repository');
 
 class CompanyRepository extends BaseRepository {
-    constructor(CompanyModel) {
-        super(CompanyModel);
+    constructor({ model }) {
+        super({ model });
     }
 
     async findCompanyByRfc(rfc, options = {}) {
