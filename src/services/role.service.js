@@ -4,7 +4,7 @@ const RoleEntity = require('@entities/role.entity');
 const { runInTransaction } = require('@utils/transaction.utils');
 
 class RoleService {
-	constructor(roleRepo) {
+	constructor({ roleRepo }) {
 		this.roleRepo = roleRepo;
 	}
 

@@ -4,7 +4,7 @@ const CompanyEntity = require('@entities/company.entity');
 const { runInTransaction } = require('@utils/transaction.utils');
 
 class CompanyService {
-	constructor(companyRepo, userRepo) {
+	constructor({ companyRepo, userRepo }) {
 		this.companyRepo = companyRepo;
 		this.userRepo = userRepo;
 	}
