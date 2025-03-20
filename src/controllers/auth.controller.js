@@ -1,29 +1,25 @@
 const cookieOptions = require('@utils/cookie.utils');
 
 class AuthController {
-    constructor(authService, refreshTokenService, tokenService) {
+    constructor({ authService }) {
         this.authService = authService;
-        this.refreshTokenService = refreshTokenService;
-        this.tokenService = tokenService;
     }
 
     async signIn(req, res) {
-        const user = req.user;
+        const result = await this.authService.authenticate(
+            req.body.email,
+            req.body.password
+        );
 
-        const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
-        await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken);
-
-        res.cookie('access_token', accessToken, cookieOptions);
-        res.status(200).json({ user });
+        res.cookie('access_token', result.tokens.accessToken, cookieOptions);
+        res.status(200).json(result);
     }
 
     async signUp(req, res) {
-        const { company, user } = req.body;
+        const result = await this.authService.signUp(req.body.company, req.body.user);
 
-        const userData = await this.authService.signUp(company, user);
-
-        res.cookie('access_token', userData.accessToken, cookieOptions)
-        res.status(201).json({ user: userData.user });
+        res.cookie('access_token', result.tokens.accessToken, cookieOptions);
+        res.status(201).json(result);
     }
 }
 

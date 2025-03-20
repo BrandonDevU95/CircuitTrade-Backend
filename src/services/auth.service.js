@@ -1,55 +1,100 @@
-const sequelize = require('@db');
 const boom = require('@hapi/boom');
-const UserService = require('./user.service');
-const TokenService = require('./token.service');
-const CompanyService = require('./company.service');
+const AuthDTO = require('@dtos/auth.dto');
+const AuthEntity = require('@entities/auth.entity');
 const { verifyPassword } = require('@utils/auth.utils');
-const RefreshTokenService = require('./refreshToken.service');
+const { runInTransaction } = require('@utils/transaction.utils');
+
 class AuthService {
-	constructor() {
-		this.userService = new UserService();
-		this.tokenService = new TokenService();
-		this.companyService = new CompanyService();
-		this.refreshTokenService = new RefreshTokenService();
+	constructor({
+		userRepo,
+		companyRepo,
+		roleRepo,
+		tokenService,
+		refreshTokenService
+	}) {
+		this.userRepo = userRepo;
+		this.companyRepo = companyRepo;
+		this.roleRepo = roleRepo;
+		this.tokenService = tokenService;
+		this.refreshTokenService = refreshTokenService;
 	}
 
-	async getUser(email, password) {
-		const user = await this.userService.findByEmail(email);
+	async signUp(rawCompanyData, rawUserData, transaction = null) {
+		return runInTransaction(async (t) => {
+			const authEntity = new AuthEntity(rawCompanyData, rawUserData);
+			const { company: companyData, user: userData } = await authEntity.prepareForCreate();
 
-		if (!user.isActive) {
-			throw boom.unauthorized('User is not active');
-		}
+			const existingCompany = await this.companyRepo.find({
+				where: {
+					[this.companyRepo.model.sequelize.Op.or]: [
+						{ rfc: authEntity._normalized.company.rfc },
+						{ email: authEntity._normalized.company.email }
+					]
+				},
+				transaction: t
+			});
 
-		//Centralizar la logica de comparacion de contraseñas
-		const isMatch = await verifyPassword(password, user.password);
+			authEntity.validateCompanyUniqueness(existingCompany[0]);
 
-		if (!isMatch) {
-			throw boom.unauthorized('Invalid email or password');
-		}
-
-		//El metodo get de un modelo de Sequelize devuelve un
-		// objeto simple de JavaScript sin métodos ni propiedades adicionales de Sequelize.
-		// eslint-disable-next-line no-unused-vars
-		const { password: _, ...sanitizedUser } = user.get({ plain: true });
-		return sanitizedUser;
-	}
-
-	async signUp(companyData, userData) {
-		return sequelize.transaction(async (transaction) => {
-			const company = await this.companyService.create(companyData, transaction);
-
-			// Crear usuario vinculado a la empresa (usando el RFC de la empresa)
-			const user = await this.userService.create(
-				{ ...userData, rfc: company.rfc }, // Envía el RFC de la empresa
-				transaction
+			const existingUser = await this.userRepo.findUserByEmail(
+				authEntity._normalized.user.email,
+				{ transaction: t }
 			);
+
+			authEntity.validateUserUniqueness(existingUser);
+
+
+			const company = await this.companyRepo.create(companyData, { transaction: t });
+
+			const role = await this.roleRepo.findRoleByName(
+				authEntity._normalized.user.role,
+				{ transaction: t }
+			);
+
+			const user = await this.userRepo.create({
+				...userData,
+				companyId: company.id,
+				roleId: role.id
+			}, { transaction: t });
+
 			const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
 
-			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, transaction);
+			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, t);
 
-			return { user, accessToken };
-		});
+			return AuthDTO.fromService({
+				...user.get({ plain: true }),
+				accessToken
+			});
+		}, transaction);
 	}
+
+	async authenticate(email, password, transaction = null) {
+		return runInTransaction(async (t) => {
+			const authEntity = new AuthEntity({}, { email, password });
+			const user = await this.userRepo.findUserByEmail(
+				authEntity._normalized.user.email,
+				{ transaction: t }
+			);
+
+			if (!user) throw boom.unauthorized('Invalid credentials');
+			if (!user.isActive) throw boom.unauthorized('User is inactive');
+
+			const isValid = await verifyPassword(
+				authEntity.userData.password,
+				user.password
+			);
+			if (!isValid) throw boom.unauthorized('Invalid credentials');
+
+			const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
+			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, t);
+
+			return AuthDTO.fromService({
+				...user.get({ plain: true }),
+				accessToken
+			});
+		}, transaction);
+	}
+
 }
 
 module.exports = AuthService;

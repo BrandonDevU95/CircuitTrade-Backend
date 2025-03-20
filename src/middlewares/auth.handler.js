@@ -27,12 +27,12 @@ async function userAuth(req, res, next) {
 
 		// 3. Verificar si hay Refresh Token desde la DB
 		const accessPayload = JWTManager.decodeToken(accessToken);
-		const refreshToken = await service.getTokensByUserId(accessPayload.sub);
+		const refreshToken = await service.getTokenByUserId(accessPayload.sub);
 		const isRefreshTokenExpired = JWTManager.isExpired(refreshToken.token);
 
 		if (isRefreshTokenExpired) {
 			res.clearCookie(ACCESS_TOKEN);
-			await service.deleteToken(refreshToken.user.id);
+			await service.revokeToken(refreshToken.user.id);
 			next(boom.unauthorized('Refresh token has expired'));
 			return;
 		}
