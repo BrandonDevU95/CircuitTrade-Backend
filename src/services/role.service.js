@@ -9,9 +9,11 @@ class RoleService {
 	}
 
 	async find() {
-		const roles = await this.roleRepo.find();
+		const roles = await this.roleRepo.find({
+			order: [['createdAt', 'DESC']]
+		});
 
-		//Considerar mover a la entidad
+		//NOTA: rejectOnEmpty no funciona en el metodo find de sequelize
 		if (roles.length === 0) throw boom.notFound('Roles not found');
 
 		return roles.map(r => RoleDTO.fromDatabase(r));

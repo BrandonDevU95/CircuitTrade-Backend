@@ -15,6 +15,7 @@ class UserService {
 			order: [['createdAt', 'DESC']],
 		});
 
+		//NOTA: rejectOnEmpty no funciona en el metodo find de sequelize
 		if (users.length === 0) throw boom.notFound('Users not found');
 
 		return users

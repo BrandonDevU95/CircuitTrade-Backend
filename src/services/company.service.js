@@ -14,8 +14,10 @@ class CompanyService {
 	async find() {
 		const companies = await this.companyRepo.find({
 			order: [['createdAt', 'DESC']],
-			rejectOnEmpty: boom.notFound('Companies not found'),
 		});
+
+		//NOTA: rejectOnEmpty no funciona en el metodo find de sequelize
+		if (companies.length === 0) throw boom.notFound('Companies not found');
 
 		return companies.map(c => CompanyDTO.fromDatabase(c));
 	}
@@ -64,8 +66,6 @@ class CompanyService {
 
 			const { affectedCount } = await this.companyRepo.update(id, updateData, {
 				transaction: t,
-				returning: true,
-				individualHooks: true
 			});
 
 			if (affectedCount === 0) throw boom.notFound('Company not found');
