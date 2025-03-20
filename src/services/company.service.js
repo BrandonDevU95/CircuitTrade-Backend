@@ -12,9 +12,10 @@ class CompanyService {
 
 
 	async find() {
-		const companies = await this.companyRepo.find();
-
-		if (companies.length === 0) throw boom.notFound('Companies not found');
+		const companies = await this.companyRepo.find({
+			order: [['createdAt', 'DESC']],
+			rejectOnEmpty: boom.notFound('Companies not found'),
+		});
 
 		return companies.map(c => CompanyDTO.fromDatabase(c));
 	}
