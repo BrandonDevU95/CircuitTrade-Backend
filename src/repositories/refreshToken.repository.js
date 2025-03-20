@@ -6,10 +6,14 @@ class RefreshTokenRepository extends BaseRepository {
         super({ model });
     }
 
-    async upsertToken(userId, token, options = {}) {
+    async upsertToken(userId, tokenData, options = {}) {
         try {
-            const [refreshToken] = await this.model.upsert(
-                { userId, token },
+            const refreshToken = await this.model.upsert(
+                {
+                    userId,
+                    token: tokenData.token,
+                    expiresAt: tokenData.expiresAt
+                },
                 { ...options, returning: true }
             );
             return refreshToken;

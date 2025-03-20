@@ -1,8 +1,7 @@
 const { Strategy } = require('passport-local');
-const boom = require('@hapi/boom');
+const container = require('@config/container');
 
-const AuthService = require('@services/auth.service');
-const service = new AuthService();
+const authService = container.resolve('authService');
 
 const LocalStrategy = new Strategy(
 	{
@@ -11,12 +10,7 @@ const LocalStrategy = new Strategy(
 	},
 	async (email, password, done) => {
 		try {
-			const user = await service.getUser(email, password);
-
-			if (!user) {
-				return done(boom.unauthorized('Invalid credentials'), false);
-			}
-
+			const user = await authService.authenticate(email, password);
 			return done(null, user);
 		} catch (error) {
 			return done(error, false);

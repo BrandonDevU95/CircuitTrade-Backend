@@ -1,9 +1,9 @@
-const { Strategy, ExtractJwt } = require('passport-jwt');
-const { User } = require('@db/models/user.model');
 const boom = require('@hapi/boom');
-
 const { config } = require('@config/config');
+const container = require('@config/container');
+const { Strategy, ExtractJwt } = require('passport-jwt');
 
+const userRepo = container.resolve('userRepo');
 const options = {
 	secretOrKey: config.jwt.secret,
 	jwtFromRequest: ExtractJwt.fromExtractors([
@@ -14,7 +14,7 @@ const options = {
 
 const JWTStrategy = new Strategy(options, async (req, payload, done) => {
 	try {
-		const user = await User.findByPk(payload.sub, {
+		const user = await userRepo.findById(payload.sub, {
 			attributes: { exclude: ['password', 'createdAt', 'updatedAt'] },
 		});
 
