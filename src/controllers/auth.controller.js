@@ -6,16 +6,14 @@ class AuthController {
     }
 
     async signIn(req, res) {
-        const result = await this.authService.authenticate(
-            req.body.email,
-            req.body.password
-        );
+        const { user, tokens } = req.user;
 
-        res.cookie('access_token', result.tokens.accessToken, cookieOptions);
-        res.status(200).json(result);
+        res.cookie('access_token', tokens.accessToken, cookieOptions);
+        res.status(200).json({ user, tokens });
     }
 
     async signUp(req, res) {
+        // Revisa la logica ya que se puede repetir en la estrategia de JWT
         const result = await this.authService.signUp(req.body.company, req.body.user);
 
         res.cookie('access_token', result.tokens.accessToken, cookieOptions);
