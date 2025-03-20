@@ -1,4 +1,5 @@
 const boom = require('@hapi/boom');
+const { Op } = require('sequelize');
 const AuthDTO = require('@dtos/auth.dto');
 const AuthEntity = require('@entities/auth.entity');
 const { verifyPassword } = require('@utils/auth.utils');
@@ -26,7 +27,7 @@ class AuthService {
 
 			const existingCompany = await this.companyRepo.find({
 				where: {
-					[this.companyRepo.model.sequelize.Op.or]: [
+					[Op.or]: [
 						{ rfc: authEntity._normalized.company.rfc },
 						{ email: authEntity._normalized.company.email }
 					]

@@ -1,4 +1,5 @@
 const boom = require('@hapi/boom');
+const { Op } = require('sequelize');
 const CompanyDTO = require('@dtos/company.dto');
 const CompanyEntity = require('@entities/company.entity');
 const { runInTransaction } = require('@utils/transaction.utils');
@@ -32,7 +33,7 @@ class CompanyService {
 
 			const existing = await this.companyRepo.find({
 				where: {
-					[this.companyRepo.model.sequelize.Op.or]: [
+					[Op.or]: [
 						{ rfc: entity._normalized.rfc },
 						{ email: entity._normalized.email }
 					]
@@ -52,9 +53,9 @@ class CompanyService {
 			const entity = new CompanyEntity(data);
 			const updateData = entity.prepareForUpdate(data);
 			if (updateData.rfc || updateData.email) {
-				const whereClause = { [this.companyRepo.model.sequelize.Op.or]: [] };
-				if (updateData.rfc) whereClause[this.companyRepo.model.sequelize.Op.or].push({ rfc: updateData.rfc });
-				if (updateData.email) whereClause[this.companyRepo.model.sequelize.Op.or].push({ email: updateData.email });
+				const whereClause = { [Op.or]: [] };
+				if (updateData.rfc) whereClause[Op.or].push({ rfc: updateData.rfc });
+				if (updateData.email) whereClause[Op.or].push({ email: updateData.email });
 
 				const existing = await this.companyRepo.find({ where: whereClause, transaction: t });
 				entity.validateUniqueness(existing[0]);
