@@ -1,4 +1,5 @@
 const cookieOptions = require('@utils/cookie.utils');
+const sequelize = require('@db');
 
 class AuthController {
     constructor({ authService }) {
@@ -13,9 +14,10 @@ class AuthController {
     }
 
     async signUp(req, res) {
-        // Revisa la logica ya que se puede repetir en la estrategia de JWT
-        const result = await this.authService.signUp(req.body.company, req.body.user);
+        const transaction = await sequelize.transaction();
+        const result = await this.authService.signUp(req.body.company, req.body.user, transaction);
 
+        await transaction.commit();
         res.cookie('access_token', result.tokens.accessToken, cookieOptions);
         res.status(201).json(result);
     }

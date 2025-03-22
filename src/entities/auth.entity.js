@@ -61,6 +61,12 @@ class AuthEntity {
             throw boom.conflict('User already exists with this email');
         }
     }
+
+    validateRoleExistence(existingRole) {
+        if (!existingRole) {
+            throw boom.badRequest('Role does not exist');
+        }
+    }
 }
 
 module.exports = AuthEntity;

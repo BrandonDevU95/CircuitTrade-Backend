@@ -44,18 +44,20 @@ class AuthService {
 
 			authEntity.validateUserUniqueness(existingUser);
 
-
-			const company = await this.companyRepo.create(companyData, { transaction: t });
-
-			const role = await this.roleRepo.findRoleByName(
+			const existingRole = await this.roleRepo.findRoleByName(
 				authEntity._normalized.user.role,
 				{ transaction: t }
 			);
 
+			authEntity.validateRoleExistence(existingRole);
+
+
+			const company = await this.companyRepo.create(companyData, { transaction: t });
+
 			const user = await this.userRepo.create({
 				...userData,
 				companyId: company.id,
-				roleId: role.id
+				roleId: existingRole.id
 			}, { transaction: t });
 
 			const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
@@ -95,7 +97,6 @@ class AuthService {
 			});
 		}, transaction);
 	}
-
 }
 
 module.exports = AuthService;
