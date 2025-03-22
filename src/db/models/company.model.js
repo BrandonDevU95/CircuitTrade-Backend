@@ -18,11 +18,6 @@ const CompanySchema = {
 		type: DataTypes.STRING(13),
 		maxLength: 13,
 		unique: true,
-		set(value) {
-			// Se usa el método helper para normalizar el RFC.
-			// Esto centraliza la transformación y evita duplicación.
-			this.setDataValue('rfc', this.constructor.normalizeRfc(value));
-		},
 	},
 	address: {
 		allowNull: false,
@@ -32,18 +27,11 @@ const CompanySchema = {
 		allowNull: false,
 		type: DataTypes.STRING(20),
 		maxLength: 20,
-		validate: {
-			is: /^[+0-9]\d{9,14}$/,
-		},
 	},
 	email: {
 		allowNull: false,
 		type: DataTypes.STRING,
 		unique: true,
-		set(value) {
-			// Se usa el método helper para normalizar el email.
-			this.setDataValue('email', this.constructor.normalizeEmail(value));
-		},
 	},
 	type: {
 		allowNull: false,
@@ -80,31 +68,7 @@ class Company extends Model {
 					fields: ['email'], // Índice único para email
 				},
 			],
-			hooks: {
-				beforeSave: (company) => {
-					// Se utiliza la función helper para normalizar
-					// los campos 'email' y 'rfc' en el hook, centralizando la lógica.
-					if (company.changed('email') && company.email) {
-						company.email = Company.normalizeEmail(company.email);
-					}
-					if (company.changed('rfc') && company.rfc) {
-						company.rfc = Company.normalizeRfc(company.rfc);
-					}
-				},
-			},
 		};
-	}
-
-	// Métodos helper para centralizar la normalización de datos.
-	static normalizeEmail(email) {
-		return email.toLowerCase().trim();
-	}
-
-	static normalizeRfc(rfc) {
-		return rfc
-			.toUpperCase()
-			.replace(/[^A-Z0-9&Ñ]/g, '')
-			.trim();
 	}
 }
 

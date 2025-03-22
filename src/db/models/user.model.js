@@ -1,5 +1,4 @@
 const { Model, DataTypes } = require('sequelize');
-const { encryptPassword } = require('@utils/auth.utils');
 
 const USER_TABLE = 'users';
 
@@ -13,32 +12,19 @@ const UserSchema = {
 	name: {
 		allowNull: false,
 		type: DataTypes.STRING(100),
-		validate: {
-			len: [3, 100],
-		},
 	},
 	password: {
 		allowNull: false,
 		type: DataTypes.STRING(255),
-		validate: {
-			len: [6, 255],
-		},
 	},
 	email: {
 		allowNull: false,
 		type: DataTypes.STRING(100),
 		unique: true,
-		set(value) {
-			// Se utiliza el método helper 'normalizeEmail' para centralizar la transformación
-			this.setDataValue('email', User.normalizeEmail(value));
-		},
 	},
 	phone: {
 		allowNull: true,
 		type: DataTypes.STRING(15),
-		validate: {
-			is: /^\+?[0-9]{7,15}$/,
-		},
 	},
 	roleId: {
 		allowNull: false,
@@ -88,21 +74,6 @@ class User extends Model {
 			tableName: USER_TABLE,
 			modelName: 'User',
 			timestamps: true,
-			hooks: {
-				beforeSave: async (user) => {
-					if (user.changed('email') && user.email) {
-						// Se utiliza el método helper para normalizar el email
-						user.email = User.normalizeEmail(user.email);
-					}
-					if (user.changed('phone') && user.phone) {
-						// Se utiliza el método helper para normalizar el teléfono
-						user.phone = User.normalizePhone(user.phone);
-					}
-					if (user.changed('password') && user.password) {
-						user.password = await encryptPassword(user.password);
-					}
-				},
-			},
 			indexes: [
 				{
 					unique: true,
@@ -113,16 +84,6 @@ class User extends Model {
 				},
 			],
 		};
-	}
-
-	// Método helper para centralizar la normalización del email
-	static normalizeEmail(email) {
-		return email.toLowerCase().trim();
-	}
-
-	// Método helper para centralizar la normalización del teléfono
-	static normalizePhone(phone) {
-		return phone.replace(/[^0-9+]/g, '');
 	}
 }
 

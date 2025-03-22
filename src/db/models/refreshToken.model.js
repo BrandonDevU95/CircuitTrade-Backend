@@ -42,13 +42,6 @@ class RefreshToken extends Model {
 			tableName: REFRESH_TOKEN,
 			modelName: 'RefreshToken',
 			timestamps: true,
-			hooks: {
-				beforeSave: async (refreshToken) => {
-					if (refreshToken.changed('token')) {
-						refreshToken.token = refreshToken.token.trim();
-					}
-				},
-			},
 			indexes: [
 				{
 					unique: true,
