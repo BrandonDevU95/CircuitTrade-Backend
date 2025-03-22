@@ -72,7 +72,7 @@ class UserService {
 					{ transaction: t }
 				);
 
-				if (existingUser && existingUser.id !== id) {
+				if (existingUser && Number(existingUser.id) !== Number(id)) {
 					userEntity.validateUniqueness(existingUser);
 				}
 			}

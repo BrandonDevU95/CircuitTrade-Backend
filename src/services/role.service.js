@@ -45,7 +45,7 @@ class RoleService {
 
 			if (updateData.name) {
 				const existing = await this.roleRepo.findRoleByName(updateData.name, { transaction: t });
-				if (existing && existing.id !== id) entity.validateUniqueness(existing);
+				if (existing && Number(existing.id) !== Number(id)) entity.validateUniqueness(existing);
 			}
 
 			const { affectedCount } = await this.roleRepo.update(id, updateData, {
@@ -53,7 +53,7 @@ class RoleService {
 				returning: true
 			});
 
-			if (affectedCount === 0) throw boom.notFound('Role not found');
+			if (affectedCount === 0) throw boom.notFound('Role not updated');
 			const updatedRole = await this.roleRepo.findById(id, { transaction: t });
 			return RoleDTO.fromDatabase(updatedRole);
 		}, transaction);
