@@ -1,5 +1,5 @@
 const boom = require('@hapi/boom');
-const { encryptPassword } = require('@utils/auth.utils');
+const { encryptPassword, verifyPassword } = require('@utils/auth.utils');
 
 class UserEntity {
     constructor(rawData) {
@@ -46,14 +46,30 @@ class UserEntity {
         };
     }
 
-    async prepareForUpdate(data) {
+    prepareForUpdate(data) {
         return {
             ...data,
             ...(data.email && { email: this.normalizeEmail(data.email) }),
             ...(data.phone && { phone: this.normalizePhone(data.phone) }),
             ...(data.role && { role: this.normalizeRole(data.role) }),
-            ...(data.password && { password: await encryptPassword(data.password) })
         };
+    }
+
+    async prepareForPasswordUpdate(currentPassword, storedPassword, newPassword) {
+
+        if (!currentPassword || !newPassword) {
+            throw boom.badRequest('Current password and new password are required');
+        }
+
+        const isMatch = await verifyPassword(currentPassword, storedPassword);
+
+        if (!isMatch) {
+            throw boom.badRequest('Current password is incorrect');
+        }
+
+        const password = await encryptPassword(newPassword);
+
+        return { password };
     }
 }
 

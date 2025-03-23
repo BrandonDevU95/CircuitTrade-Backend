@@ -63,31 +63,35 @@ class UserService {
 	async update(id, data, transaction = null) {
 		return runInTransaction(async (t) => {
 			const userEntity = new UserEntity(data);
-			const updatePayload = await userEntity.prepareForUpdate(data);
+			const updateData = userEntity.prepareForUpdate(data);
+			const currentUser = await this.userRepo.findById(id, { transaction: t });
 
-			// Validar email si aplica
-			if (updatePayload.email) {
-				const existingUser = await this.userRepo.findUserByEmail(
-					updatePayload.email,
-					{ transaction: t }
-				);
-
-				if (existingUser && Number(existingUser.id) !== Number(id)) {
-					userEntity.validateUniqueness(existingUser);
-				}
+			// Validar email único
+			if (updateData.email && updateData.email !== currentUser.email) {
+				await this.validateUniqueEmail(updateData.email, id, t);
 			}
 
 			// Actualizar rol si aplica
-			if (updatePayload.role) {
-				const role = await this.roleRepo.findRoleByName(
-					userEntity._normalized.role,
-					{ transaction: t }
-				);
-				updatePayload.roleId = role.id;
-				delete updatePayload.role;
+			if (updateData.role) {
+				updateData.roleId = await this.handleRoleUpdate(updateData.role, t);
+				delete updateData.role;
 			}
 
-			const { affectedCount } = await this.userRepo.update(id, updatePayload, { transaction: t });
+			// Actualizar password si aplica
+			if (updateData.currentPassword || updateData.newPassword) {
+
+				const { password } = await userEntity.prepareForPasswordUpdate(
+					updateData.currentPassword,
+					currentUser.password,
+					updateData.newPassword
+				);
+
+				updateData.password = password;
+				delete updateData.currentPassword;
+				delete updateData.newPassword;
+			}
+
+			const { affectedCount } = await this.userRepo.update(id, updateData, { transaction: t });
 
 			if (affectedCount === 0) return { id, message: 'User not updated' };
 
@@ -114,6 +118,19 @@ class UserService {
 
 			return UserDTO.fromDatabase(user);
 		}, transaction);
+	}
+
+	async validateUniqueEmail(email, userId, transaction) {
+		const existingUser = await this.userRepo.findUserByEmail(email, { transaction });
+		if (existingUser && existingUser.id !== userId) {
+			throw boom.conflict('Email already registered to another user');
+		}
+	}
+
+	async handleRoleUpdate(roleName, transaction) {
+		const role = await this.roleRepo.findRoleByName(roleName, { transaction });
+		if (!role) throw boom.notFound('Specified role does not exist');
+		return role.id;
 	}
 }
 
