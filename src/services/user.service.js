@@ -32,29 +32,22 @@ class UserService {
 			const userEntity = new UserEntity(data);
 
 			// Prevención de duplicados por email
-			const existingUser = await this.userRepo.findUserByEmail(
-				userEntity._normalized.email,
-				{ transaction: t }
-			);
+			await this.validateUniqueEmail(userEntity._normalized.email, null, t);
 
-			userEntity.validateUniqueness(existingUser);
+			const [company, role] = await Promise.all([
+				this.companyRepo.findCompanyByRfc(userEntity._normalized.rfc, { transaction: t }),
+				this.roleRepo.findRoleByName(userEntity._normalized.role, { transaction: t })
+			]);
 
-			const company = await this.companyRepo.findCompanyByRfc(
-				userEntity._normalized.rfc,
-				{ transaction: t }
-			);
-			const role = await this.roleRepo.findRoleByName(
-				userEntity._normalized.role,
-				{ transaction: t }
-			);
+			if (!company || !role) throw boom.notFound(company ? 'Role not found' : 'Company not found');
 
-			const userPayload = {
+			const newUserData = {
 				...await userEntity.prepareForCreate(),
 				companyId: company.id,
 				roleId: role.id
 			};
 
-			const newUser = await this.userRepo.create(userPayload, { transaction: t });
+			const newUser = await this.userRepo.create(newUserData, { transaction: t });
 
 			return UserDTO.fromDatabase(newUser);
 		}, transaction);
@@ -67,8 +60,8 @@ class UserService {
 			const currentUser = await this.userRepo.findById(id, { transaction: t });
 
 			// Validar email único
-			if (updateData.email && updateData.email !== currentUser.email) {
-				await this.validateUniqueEmail(updateData.email, id, t);
+			if (updateData.email) {
+				await this.validateUniqueEmail(updateData.email, currentUser.id, t);
 			}
 
 			// Actualizar rol si aplica
@@ -79,7 +72,6 @@ class UserService {
 
 			// Actualizar password si aplica
 			if (updateData.currentPassword || updateData.newPassword) {
-
 				const { password } = await userEntity.prepareForPasswordUpdate(
 					updateData.currentPassword,
 					currentUser.password,
@@ -91,11 +83,11 @@ class UserService {
 				delete updateData.newPassword;
 			}
 
-			const { affectedCount } = await this.userRepo.update(id, updateData, { transaction: t });
+			const { affectedCount } = await this.userRepo.update(currentUser.id, updateData, { transaction: t });
 
 			if (affectedCount === 0) return { id, message: 'User not updated' };
 
-			const updatedUser = await this.userRepo.findUserByIdWithDetails(id, { transaction: t });
+			const updatedUser = await this.userRepo.findUserByIdWithDetails(currentUser.id, { transaction: t });
 
 			return UserDTO.fromDatabase(updatedUser);
 		}, transaction);
