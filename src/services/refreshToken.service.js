@@ -20,8 +20,9 @@ class RefreshTokenService {
 	}
 
 	async getTokenByUserId(userId) {
-		const refreshToken = await this.refreshTokenRepo.findTokenByUserId(userId);
-		if (!refreshToken) throw boom.notFound('No refresh token found');
+		const refreshToken = await this.refreshTokenRepo.findTokenByUserId(userId, {
+			rejectOnEmpty: boom.notFound('No refresh token found')
+		});
 
 		return refreshToken;
 	}
