@@ -66,7 +66,8 @@ class AuthService {
 
 			return AuthDTO.fromService({
 				...user.get({ plain: true }),
-				accessToken
+				accessToken,
+				refreshToken
 			});
 		}, transaction);
 	}
@@ -93,7 +94,8 @@ class AuthService {
 
 			return AuthDTO.fromService({
 				...user.get({ plain: true }),
-				accessToken
+				accessToken,
+				refreshToken
 			});
 		}, transaction);
 	}

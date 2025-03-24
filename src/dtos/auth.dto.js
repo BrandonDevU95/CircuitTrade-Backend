@@ -1,7 +1,7 @@
 class AuthDTO {
     static fromService(data) {
         // eslint-disable-next-line no-unused-vars
-        const { accessToken, password, ...user } = data;
+        const { accessToken, refreshToken, password, ...user } = data;
         return {
             user: {
                 ...user,
@@ -13,7 +13,7 @@ class AuthDTO {
             },
             tokens: {
                 accessToken,
-                tokenType: 'Bearer'
+                refreshToken,
             }
         };
     }
