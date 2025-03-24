@@ -1,5 +1,6 @@
 const express = require('express');
 const passport = require('passport');
+const userAuth = require('@middlewares/auth.handler');
 const container = require('@config/container');
 const validatorHandler = require('@middlewares/validator.handler');
 const { signInSchema, signUpSchema } = require('@schemas/auth.schema');
@@ -14,5 +15,12 @@ router.post(
 	controller.signIn.bind(controller)
 );
 router.post('/sign-up', validatorHandler(signUpSchema, 'body'), controller.signUp.bind(controller));
+
+router.get(
+	'/me',
+	userAuth,
+	passport.authenticate('jwt', { session: false }),
+	controller.me.bind(controller)
+);
 
 module.exports = router;
