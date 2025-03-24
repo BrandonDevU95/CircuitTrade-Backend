@@ -1,7 +1,7 @@
 // auth.handler.js
 const boom = require('@hapi/boom');
 const container = require('@config/container');
-const cookieOptions = require('@utils/cookie.utils');
+const { accessCookieOptions } = require('@utils/cookie.utils');
 const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@utils/constants');
 
 const tokenService = container.resolve('tokenService');
@@ -59,7 +59,7 @@ async function refreshTokenHandler(req, res, next) {
         });
 
         // Establecer la nueva cookie de access token
-        res.cookie(ACCESS_TOKEN, newAccessToken, cookieOptions);
+        res.cookie(ACCESS_TOKEN, newAccessToken, accessCookieOptions);
         req.user = tokenService.decodeToken(newAccessToken);
         next();
     } catch (error) {
