@@ -97,6 +97,16 @@ class AuthService {
 			});
 		}, transaction);
 	}
+
+	async me(userId, transaction = null) {
+		return runInTransaction(async (t) => {
+			const user = await this.userRepo.findUserByIdWithDetails(userId, { transaction: t });
+
+			if (!user) throw boom.notFound('User not found');
+
+			return AuthDTO.fromModel(user.get({ plain: true }));
+		}, transaction);
+	}
 }
 
 module.exports = AuthService;

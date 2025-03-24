@@ -21,6 +21,11 @@ class AuthController {
         res.cookie('access_token', result.tokens.accessToken, cookieOptions);
         res.status(201).json(result);
     }
+
+    async me(req, res) {
+        const user = await this.authService.me(req.user.id);
+        res.status(200).json(user);
+    }
 }
 
 module.exports = AuthController;
