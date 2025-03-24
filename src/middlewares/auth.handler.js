@@ -1,8 +1,9 @@
-const JWTManager = require('@utils/jwt.utils');
 const boom = require('@hapi/boom');
-const RefreshTokenService = require('@services/refreshToken.service');
+const container = require('@config/container');
+const cookieOptions = require('@utils/cookie.utils');
 
-const service = new RefreshTokenService();
+const tokenService = container.resolve('tokenService');
+const refreshTokenService = container.resolve('refreshTokenService');
 
 const ACCESS_TOKEN = 'access_token';
 
@@ -17,36 +18,36 @@ async function userAuth(req, res, next) {
 		}
 
 		// 2. Verificar si el Access Token ha expirado
-		const isAccessTokenExpired = JWTManager.isExpired(accessToken);
+		const isAccessTokenExpired = tokenService.isExpired(accessToken);
 
 		if (!isAccessTokenExpired) {
-			const payload = JWTManager.verifyAccessToken(accessToken);
+			const payload = tokenService.verifyAccessToken(accessToken);
 			req.user = payload;
 			return next();
 		}
 
 		// 3. Verificar si hay Refresh Token desde la DB
-		const accessPayload = JWTManager.decodeToken(accessToken);
-		const refreshToken = await service.getTokenByUserId(accessPayload.sub);
-		const isRefreshTokenExpired = JWTManager.isExpired(refreshToken.token);
+		const accessPayload = tokenService.decodeToken(accessToken);
+		const refreshToken = await refreshTokenService.getTokenByUserId(accessPayload.sub);
+		const isRefreshTokenExpired = tokenService.isExpired(refreshToken.token);
 
 		if (isRefreshTokenExpired) {
 			res.clearCookie(ACCESS_TOKEN);
-			await service.revokeToken(refreshToken.user.id);
+			await refreshTokenService.revokeToken(refreshToken.user.id);
 			next(boom.unauthorized('Refresh token has expired'));
 			return;
 		}
 
 		// 4. Generar nuevo Access Token
-		const newAccessToken = JWTManager.generateAccessToken({
+		const newAccessToken = tokenService.generateAccessToken({
 			id: refreshToken.user.id,
 			role: refreshToken.user.role_id,
 		});
 
-		res.cookie(ACCESS_TOKEN, newAccessToken, { httpOnly: true });
+		res.cookie(ACCESS_TOKEN, newAccessToken, cookieOptions); // Actualizar la cookie
 		req.cookies[ACCESS_TOKEN] = newAccessToken; // Actualizar el objeto cookies
 
-		req.user = JWTManager.decodeToken(newAccessToken);
+		req.user = tokenService.decodeToken(newAccessToken);
 		next();
 	} catch (error) {
 		next(error);
