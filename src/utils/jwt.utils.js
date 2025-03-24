@@ -27,12 +27,16 @@ class JWTManager {
 	}
 
 	static isExpired(token) {
-		const decode = jwt.decode(token);
-		if (!decode || !decode.exp) {
+		try {
+			const decode = jwt.decode(token);
+			if (!decode || !decode.exp) {
+				return true;
+			}
+			const currentTime = Date.now() / 1000;
+			return currentTime > decode.exp;
+		} catch (error) {
 			return true;
 		}
-		const currentTime = Date.now() / 1000;
-		return currentTime > decode.exp;
 	}
 }
 
