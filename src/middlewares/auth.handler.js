@@ -1,11 +1,11 @@
 const boom = require('@hapi/boom');
 const container = require('@config/container');
-const cookieOptions = require('@utils/cookie.utils');
+const { accessCookieOptions } = require('@utils/cookie.utils');
+const { ACCESS_TOKEN } = require('@utils/constants');
 
 const tokenService = container.resolve('tokenService');
 const refreshTokenService = container.resolve('refreshTokenService');
 
-const ACCESS_TOKEN = 'access_token';
 
 async function userAuth(req, res, next) {
 	try {
@@ -44,7 +44,7 @@ async function userAuth(req, res, next) {
 			role: refreshToken.user.role_id,
 		});
 
-		res.cookie(ACCESS_TOKEN, newAccessToken, cookieOptions); // Actualizar la cookie
+		res.cookie(ACCESS_TOKEN, newAccessToken, accessCookieOptions); // Actualizar la cookie
 		req.cookies[ACCESS_TOKEN] = newAccessToken; // Actualizar el objeto cookies
 
 		req.user = tokenService.decodeToken(newAccessToken);

@@ -1,13 +1,14 @@
 const boom = require('@hapi/boom');
 const { config } = require('@config/config');
 const container = require('@config/container');
+const { ACCESS_TOKEN } = require('@utils/constants');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 
 const userRepo = container.resolve('userRepo');
 const options = {
 	secretOrKey: config.jwt.secret,
 	jwtFromRequest: ExtractJwt.fromExtractors([
-		(req) => req.cookies.access_token,
+		(req) => req.cookies[ACCESS_TOKEN],
 	]),
 	passReqToCallback: true, // Agregado para que se pase req al callback
 };
