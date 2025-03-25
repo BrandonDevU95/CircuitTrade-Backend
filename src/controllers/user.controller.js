@@ -1,16 +1,16 @@
 class UserController {
     constructor({
-        CreateUserUseCase,
-        DeleteUserUseCase,
-        FindUserUseCase,
-        FindUsersUseCase,
-        UpdateUserUseCase
+        createUserUseCase,
+        deleteUserUseCase,
+        findUserUseCase,
+        findUsersUseCase,
+        updateUserUseCase
     }) {
-        this.createUserUseCase = CreateUserUseCase;
-        this.deleteUserUseCase = DeleteUserUseCase;
-        this.findUserUseCase = FindUserUseCase;
-        this.findUsersUseCase = FindUsersUseCase;
-        this.updateUserUseCase = UpdateUserUseCase;
+        this.createUserUseCase = createUserUseCase;
+        this.deleteUserUseCase = deleteUserUseCase;
+        this.findUserUseCase = findUserUseCase;
+        this.findUsersUseCase = findUsersUseCase;
+        this.updateUserUseCase = updateUserUseCase;
     }
 
     async getUsers(req, res) {
