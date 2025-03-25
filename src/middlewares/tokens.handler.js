@@ -5,7 +5,8 @@ const { accessCookieOptions } = require('@utils/cookie.utils');
 const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@utils/constants');
 
 const tokenService = container.resolve('tokenService');
-const refreshTokenService = container.resolve('refreshTokenService');
+const getTokenUseCase = container.resolve('getTokenUseCase');
+const revokeTokenUseCase = container.resolve('revokeTokenUseCase');
 
 async function accessTokenHandler(req, res, next) {
     try {
@@ -38,19 +39,19 @@ async function refreshTokenHandler(req, res, next) {
         const payload = tokenService.verifyRefreshToken(refreshToken);;
 
         // Verificar si el refresh token está en la base de datos y es válido
-        const storedToken = await refreshTokenService.getTokenByUserId(payload.sub);
+        const storedToken = await getTokenUseCase.execute(payload.sub);
         const isRefreshTokenValid = tokenService.isExpired(storedToken.token);
 
         if (isRefreshTokenValid) {
             res.clearCookie(REFRESH_TOKEN);
-            await refreshTokenService.revokeToken(storedToken.user.id);
+            await revokeTokenUseCase.execute(storedToken.user.id);
             next(boom.unauthorized('Invalid refresh token'));
             return;
         }
 
         if (storedToken.token !== refreshToken) {
             res.clearCookie(REFRESH_TOKEN);
-            await refreshTokenService.revokeToken(payload.sub);
+            await revokeTokenUseCase.execute(payload.sub);
             next(boom.unauthorized('Invalid refresh token'));
             return;
         }

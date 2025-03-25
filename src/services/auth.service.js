@@ -11,13 +11,13 @@ class AuthService {
 		companyRepo,
 		roleRepo,
 		tokenService,
-		refreshTokenService
+		upsertTokenUseCase,
 	}) {
 		this.userRepo = userRepo;
 		this.companyRepo = companyRepo;
 		this.roleRepo = roleRepo;
 		this.tokenService = tokenService;
-		this.refreshTokenService = refreshTokenService;
+		this.upsertToken = upsertTokenUseCase
 	}
 
 	async signUp(rawCompanyData, rawUserData, transaction = null) {
@@ -62,7 +62,7 @@ class AuthService {
 
 			const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
 
-			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, t);
+			await this.upsertToken.execute(user.id, refreshToken, t);
 
 			return AuthDTO.fromService({
 				...user.get({ plain: true }),
@@ -90,7 +90,7 @@ class AuthService {
 			if (!isValid) throw boom.unauthorized('Invalid credentials');
 
 			const { accessToken, refreshToken } = this.tokenService.generateTokens(user);
-			await this.refreshTokenService.upsertRefreshToken(user.id, refreshToken, t);
+			await this.upsertToken.execute(user.id, refreshToken, t);
 
 			return AuthDTO.fromService({
 				...user.get({ plain: true }),

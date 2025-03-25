@@ -25,8 +25,11 @@ const DeleteRoleUseCase = require("@usecases/role/delete-role.usecase");
 const FindRoleUseCase = require("@usecases/role/find-role.usecase");
 const FindRolesUseCase = require("@usecases/role/find-roles.usecase");
 const UpdateRoleUseCase = require("@usecases/role/update-role.usecase");
+//RefreshTokenUseCases
+const UpsertTokenUseCase = require("@usecases/refresh-token/upsert-token.usecase");
+const RevokeToken = require("@usecases/refresh-token/revoke-token.usecase");
+const GetTokenUseCase = require("@usecases/refresh-token/get-token.usecase");
 //Services
-const RefreshTokenService = require("@services/refreshToken.service");
 const TokenService = require("@services/token.service");
 const AuthService = require("@services/auth.service");
 //Controllers
@@ -116,18 +119,26 @@ container.register({
         roleRepo: container.resolve("roleRepo"),
     })),
 });
+container.register({
+    upsertTokenUseCase: asClass(UpsertTokenUseCase).inject(() => ({
+        refreshTokenRepo: container.resolve("refreshTokenRepo"),
+    })),
+    revokeTokenUseCase: asClass(RevokeToken).inject(() => ({
+        refreshTokenRepo: container.resolve("refreshTokenRepo"),
+    })),
+    getTokenUseCase: asClass(GetTokenUseCase).inject(() => ({
+        refreshTokenRepo: container.resolve("refreshTokenRepo"),
+    })),
+});
 //Despues inyecta los repositorios en los servicios que son los que recibe el constructor
 container.register({
     tokenService: asClass(TokenService),
-    refreshTokenService: asClass(RefreshTokenService).inject(() => ({
-        refreshTokenRepo: container.resolve("refreshTokenRepo")
-    })),
     authService: asClass(AuthService).inject(() => ({
         userRepo: container.resolve("userRepo"),
         companyRepo: container.resolve("companyRepo"),
         roleRepo: container.resolve("roleRepo"),
         tokenService: container.resolve("tokenService"),
-        refreshTokenService: container.resolve("refreshTokenService")
+        upsertTokenUseCase: container.resolve("upsertTokenUseCase"),
     })),
 });
 
