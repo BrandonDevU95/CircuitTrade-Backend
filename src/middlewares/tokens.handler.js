@@ -15,15 +15,10 @@ async function accessTokenHandler(req, res, next) {
             next(boom.unauthorized('Access token is required'));
             return;
         }
+        // Verificacion firma del token y expiracion
+        const payload = tokenService.verifyAccessToken(accessToken);
 
-        const isAccessTokenExpired = tokenService.isExpired(accessToken);
-
-        if (isAccessTokenExpired) {
-            next(boom.unauthorized('Access token has expired'));
-            return;
-        }
-
-        req.user = tokenService.verifyAccessToken(accessToken);
+        req.user = payload;
         next();
     } catch (error) {
         next(error);
@@ -39,7 +34,8 @@ async function refreshTokenHandler(req, res, next) {
             return;
         }
 
-        const payload = tokenService.decodeToken(refreshToken);
+        // Verificar firma del token y expiración
+        const payload = tokenService.verifyRefreshToken(refreshToken);;
 
         // Verificar si el refresh token está en la base de datos y es válido
         const storedToken = await refreshTokenService.getTokenByUserId(payload.sub);
@@ -48,7 +44,14 @@ async function refreshTokenHandler(req, res, next) {
         if (isRefreshTokenValid) {
             res.clearCookie(REFRESH_TOKEN);
             await refreshTokenService.revokeToken(storedToken.user.id);
-            next(boom.unauthorized('Refresh token has expired'));
+            next(boom.unauthorized('Invalid refresh token'));
+            return;
+        }
+
+        if (storedToken.token !== refreshToken) {
+            res.clearCookie(REFRESH_TOKEN);
+            await refreshTokenService.revokeToken(payload.sub);
+            next(boom.unauthorized('Invalid refresh token'));
             return;
         }
 
@@ -63,6 +66,7 @@ async function refreshTokenHandler(req, res, next) {
         req.user = tokenService.decodeToken(newAccessToken);
         next();
     } catch (error) {
+        res.clearCookie(REFRESH_TOKEN);
         next(error);
     }
 }

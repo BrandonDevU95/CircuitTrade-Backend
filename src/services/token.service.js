@@ -1,6 +1,5 @@
 const { logger } = require('@logger');
 const JWTManager = require('@utils/jwt.utils');
-const e = require('express');
 
 const jwtLogger = logger.injectContext('TOKEN_SERVICE');
 class TokenService {
@@ -31,6 +30,15 @@ class TokenService {
         } catch (error) {
             jwtLogger.error('Invalid access token:', error.message);
             throw new Error('Invalid access token');
+        }
+    }
+
+    verifyRefreshToken(token) {
+        try {
+            return JWTManager.verifyRefreshToken(token);
+        } catch (error) {
+            jwtLogger.error('Invalid refresh token:', error.message);
+            throw new Error('Invalid refresh token');
         }
     }
 
