@@ -7,14 +7,19 @@ const UserRepository = require("@repositories/user.repository");
 const CompanyRepository = require("@repositories/company.repository");
 const RoleRepository = require("@repositories/role.repository");
 const RefreshTokenRepository = require("@repositories/refreshToken.repository");
-//UseCases
+//UserUseCases
 const CreateUserUseCase = require("@usecases/user/create-user.usecase");
 const DeleteUserUseCase = require("@usecases/user/delete-user.usecase");
 const FindUserUseCase = require("@usecases/user/find-user.usecase");
 const FindUsersUseCase = require("@usecases/user/find-users.usecase");
 const UpdateUserUseCase = require("@usecases/user/update-user.usecase");
+//CompanyUseCases
+const CreateCompanyUseCase = require("@usecases/company/create-company.usecase");
+const DeleteCompanyUseCase = require("@usecases/company/delete-company.usecase");
+const FindCompanyUseCase = require("@usecases/company/find-company.usecase");
+const FindCompaniesUseCase = require("@usecases/company/find-companies.usecase");
+const UpdateCompanyUseCase = require("@usecases/company/update-company.usecase");
 //Services
-const CompanyService = require("@services/company.service");
 const RoleService = require("@services/role.service");
 const RefreshTokenService = require("@services/refreshToken.service");
 const TokenService = require("@services/token.service");
@@ -72,12 +77,27 @@ container.register({
     })),
 });
 
-//Despues inyecta los repositorios en los servicios que son los que recibe el constructor
 container.register({
-    companyService: asClass(CompanyService).inject(() => ({
+    createCompanyUseCase: asClass(CreateCompanyUseCase).inject(() => ({
+        companyRepo: container.resolve("companyRepo"),
+    })),
+    deleteCompanyUseCase: asClass(DeleteCompanyUseCase).inject(() => ({
         companyRepo: container.resolve("companyRepo"),
         userRepo: container.resolve("userRepo"),
     })),
+    findCompanyUseCase: asClass(FindCompanyUseCase).inject(() => ({
+        companyRepo: container.resolve("companyRepo"),
+    })),
+    findCompaniesUseCase: asClass(FindCompaniesUseCase).inject(() => ({
+        companyRepo: container.resolve("companyRepo"),
+    })),
+    updateCompanyUseCase: asClass(UpdateCompanyUseCase).inject(() => ({
+        companyRepo: container.resolve("companyRepo"),
+    })),
+});
+
+//Despues inyecta los repositorios en los servicios que son los que recibe el constructor
+container.register({
     roleService: asClass(RoleService).inject(() => ({
         roleRepo: container.resolve("roleRepo"),
     })),
@@ -104,7 +124,11 @@ container.register({
         updateUserUseCase: container.resolve("updateUserUseCase"),
     })),
     companyController: asClass(CompanyController).inject(() => ({
-        companyService: container.resolve("companyService"),
+        createCompanyUseCase: container.resolve("createCompanyUseCase"),
+        deleteCompanyUseCase: container.resolve("deleteCompanyUseCase"),
+        findCompanyUseCase: container.resolve("findCompanyUseCase"),
+        findCompaniesUseCase: container.resolve("findCompaniesUseCase"),
+        updateCompanyUseCase: container.resolve("updateCompanyUseCase"),
     })),
     roleController: asClass(RoleController).inject(() => ({
         roleService: container.resolve("roleService"),
