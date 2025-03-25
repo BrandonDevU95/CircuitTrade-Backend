@@ -80,6 +80,7 @@
 		"@repositories": "src/repositories",
 		"@entities": "src/entities",
 		"@services": "src/services",
+		"@usecases": "src/usecases",
 		"@utils": "src/utils",
 		"@dtos": "src/dtos",
 		"@logger": "src/logger"
