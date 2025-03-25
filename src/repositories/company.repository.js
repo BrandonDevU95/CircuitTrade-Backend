@@ -1,4 +1,3 @@
-const boom = require('@hapi/boom');
 const BaseRepository = require('./base.repository');
 
 class CompanyRepository extends BaseRepository {
@@ -10,7 +9,6 @@ class CompanyRepository extends BaseRepository {
         return await this.model.findOne({
             where: { rfc },
             ...options,
-            rejectOnEmpty: boom.notFound(`${this.model.name} not found`),
         });
     }
 }
