@@ -3,8 +3,12 @@ const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@utils/constants');
 const { accessCookieOptions, refreshCookieOptions } = require('@utils/cookie.utils');
 
 class AuthController {
-    constructor({ authService }) {
-        this.authService = authService;
+    constructor({
+        signUpUseCase,
+        userInfoUseCase,
+    }) {
+        this.signUpUseCase = signUpUseCase;
+        this.userInfoUseCase = userInfoUseCase;
     }
 
     async signIn(req, res) {
@@ -17,7 +21,7 @@ class AuthController {
 
     async signUp(req, res) {
         const transaction = await sequelize.transaction();
-        const { user, tokens } = await this.authService.signUp(req.body.company, req.body.user, transaction);
+        const { user, tokens } = await this.signUpUseCase.execute(req.body.company, req.body.user, transaction);
 
         await transaction.commit();
         res.cookie(ACCESS_TOKEN, tokens.accessToken, accessCookieOptions);
@@ -26,7 +30,7 @@ class AuthController {
     }
 
     async me(req, res) {
-        const user = await this.authService.me(req.user.id);
+        const user = await this.userInfoUseCase.execute(req.user.id);
         res.status(200).json(user);
     }
 

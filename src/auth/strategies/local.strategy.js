@@ -1,7 +1,7 @@
 const { Strategy } = require('passport-local');
 const container = require('@config/container');
 
-const authService = container.resolve('authService');
+const signInUseCase = container.resolve('signInUseCase');
 
 const LocalStrategy = new Strategy(
 	{
@@ -10,7 +10,7 @@ const LocalStrategy = new Strategy(
 	},
 	async (email, password, done) => {
 		try {
-			const user = await authService.authenticate(email, password);
+			const user = await signInUseCase.execute(email, password);
 			return done(null, user);
 		} catch (error) {
 			return done(error, false);

@@ -29,9 +29,12 @@ const UpdateRoleUseCase = require("@usecases/role/update-role.usecase");
 const UpsertTokenUseCase = require("@usecases/refresh-token/upsert-token.usecase");
 const RevokeToken = require("@usecases/refresh-token/revoke-token.usecase");
 const GetTokenUseCase = require("@usecases/refresh-token/get-token.usecase");
+//AuthUseCases
+const SignInUseCase = require("@usecases/auth/sign-in.usecase");
+const SignUpUseCase = require("@usecases/auth/sign-up.usecase");
+const UserInfoUseCase = require("@usecases/auth/user-info.usecase");
 //Services
 const TokenService = require("@services/token.service");
-const AuthService = require("@services/auth.service");
 //Controllers
 const UserController = require("@controllers/user.controller");
 const CompanyController = require("@controllers/company.controller");
@@ -130,16 +133,26 @@ container.register({
         refreshTokenRepo: container.resolve("refreshTokenRepo"),
     })),
 });
-//Despues inyecta los repositorios en los servicios que son los que recibe el constructor
 container.register({
-    tokenService: asClass(TokenService),
-    authService: asClass(AuthService).inject(() => ({
+    signInUseCase: asClass(SignInUseCase).inject(() => ({
+        userRepo: container.resolve("userRepo"),
+        tokenService: container.resolve("tokenService"),
+        upsertTokenUseCase: container.resolve("upsertTokenUseCase"),
+    })),
+    signUpUseCase: asClass(SignUpUseCase).inject(() => ({
         userRepo: container.resolve("userRepo"),
         companyRepo: container.resolve("companyRepo"),
         roleRepo: container.resolve("roleRepo"),
         tokenService: container.resolve("tokenService"),
         upsertTokenUseCase: container.resolve("upsertTokenUseCase"),
     })),
+    userInfoUseCase: asClass(UserInfoUseCase).inject(() => ({
+        userRepo: container.resolve("userRepo"),
+    })),
+});
+//Despues inyecta los repositorios en los servicios que son los que recibe el constructor
+container.register({
+    tokenService: asClass(TokenService),
 });
 
 //Por ultimo inyecta los servicios en los controladores que son los que recibe el constructor
@@ -166,7 +179,8 @@ container.register({
         updateRoleUseCase: container.resolve("updateRoleUseCase"),
     })),
     authController: asClass(AuthController).inject(() => ({
-        authService: container.resolve("authService"),
+        signUpUseCase: container.resolve("signUpUseCase"),
+        userInfoUseCase: container.resolve("userInfoUseCase"),
     })),
 
 });
