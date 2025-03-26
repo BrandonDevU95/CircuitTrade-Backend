@@ -3,10 +3,10 @@ const { createContainer, asClass, asValue } = require("awilix");
 
 const sequelize = require("@infrastructure/db");
 //Repositories
-const UserRepository = require("@domain/repositories/user.repository");
-const CompanyRepository = require("@domain/repositories/company.repository");
-const RoleRepository = require("@domain/repositories/role.repository");
-const RefreshTokenRepository = require("@domain/repositories/refreshToken.repository");
+const UserRepository = require("@infrastructure/repositories/user.repository");
+const CompanyRepository = require("@infrastructure/repositories/company.repository");
+const RoleRepository = require("@infrastructure/repositories/role.repository");
+const RefreshTokenRepository = require("@infrastructure/repositories/refreshToken.repository");
 //UserUseCases
 const CreateUserUseCase = require("@application/usecases/user/create-user.usecase");
 const DeleteUserUseCase = require("@application/usecases/user/delete-user.usecase");

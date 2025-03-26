@@ -1,7 +1,9 @@
 const boom = require('@hapi/boom');
+const IBaseRepository = require('@domain/repositories/IBaseRepository');
 
-class BaseRepository {
+class BaseRepository extends IBaseRepository {
     constructor({ model }) {
+        super();
         this.model = model;
     }
 
