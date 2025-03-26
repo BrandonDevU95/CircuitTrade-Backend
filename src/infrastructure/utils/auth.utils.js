@@ -1,5 +1,5 @@
 const bcrypt = require('bcrypt');
-const { config } = require('@config/config');
+const { config } = require('@infrastructure/config/config');
 
 const ERROR_MESSAGES = {
 	INVALID_PASSWORD: 'Invalid password input',

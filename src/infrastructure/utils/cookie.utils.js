@@ -1,4 +1,4 @@
-const { config } = require('@config/config');
+const { config } = require('@infrastructure/config/config');
 
 const accessCookieOptions = {
     httpOnly: true,

@@ -1,9 +1,9 @@
+const { config } = require('@infrastructure/config/config');
+const { secureFormat, logFormatter } = require('./formats');
+const { customLevels, customColors } = require('./customs');
+const { baseTransports, consoleTransport } = require('./transports');
 const { createLogger, format, transports, addColors } = require('winston');
 const { combine, timestamp, metadata, errors } = format;
-const { secureFormat, logFormatter } = require('./formats');
-const { baseTransports, consoleTransport } = require('./transports');
-const { config } = require('@config/config');
-const { customLevels, customColors } = require('./customs');
 
 // Se añaden los colores personalizados
 addColors(customColors);

@@ -1,5 +1,5 @@
-const { logger } = require('@logger');
-const JWTManager = require('@utils/jwt.utils');
+const { logger } = require('@infrastructure/logger');
+const JWTManager = require('@infrastructure/utils/jwt.utils');
 
 const jwtLogger = logger.injectContext('TOKEN_SERVICE');
 class TokenService {

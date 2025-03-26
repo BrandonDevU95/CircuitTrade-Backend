@@ -1,5 +1,5 @@
-const { config } = require('@config/config');
-const { logger } = require('@logger');
+const { config } = require('@infraestructure/config/config');
+const { logger } = require('@infraestructure/logger');
 
 const seqLogger = logger.injectContext('SEQUELIZE_CONFIG');
 

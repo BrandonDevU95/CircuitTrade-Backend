@@ -1,6 +1,6 @@
-const { Sequelize } = require('sequelize');
 const setupModels = require('./models');
-const { config } = require('@config/config');
+const { Sequelize } = require('sequelize');
+const { config } = require('@infraestructure/config/config');
 const env = config.node.env;
 const connection = require('./config/config')[env];
 

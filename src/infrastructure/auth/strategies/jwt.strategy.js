@@ -1,8 +1,8 @@
 const boom = require('@hapi/boom');
-const { config } = require('@config/config');
-const container = require('@config/container');
-const { ACCESS_TOKEN } = require('@utils/constants');
 const { Strategy, ExtractJwt } = require('passport-jwt');
+const { config } = require('@infraestructure/config/config');
+const container = require('@infraestructure/config/container');
+const { ACCESS_TOKEN } = require('@infraestructure/utils/constants');
 
 const userRepo = container.resolve('userRepo');
 const options = {

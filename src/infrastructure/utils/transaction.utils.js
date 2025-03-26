@@ -1,5 +1,5 @@
 // utils/transactionHelper.js
-const sequelize = require('@db');
+const sequelize = require('@infrastructure/db');
 
 async function runInTransaction(callback, transaction = null) {
     if (!transaction) {

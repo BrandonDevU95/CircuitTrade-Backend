@@ -1,7 +1,7 @@
-const { transports, format } = require('winston');
-const { config } = require('@config/config');
-const DailyRotateFile = require('winston-daily-rotate-file');
 const path = require('path');
+const { transports, format } = require('winston');
+const { config } = require('@infrastructure/config/config');
+const DailyRotateFile = require('winston-daily-rotate-file');
 
 // Función generadora de transportes con rotación
 const createRotatingTransport = ({

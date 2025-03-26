@@ -1,5 +1,5 @@
 const jwt = require('jsonwebtoken');
-const { config } = require('@config/config');
+const { config } = require('@infrastructure/config/config');
 
 class JWTManager {
 	static generateAccessToken(user) {

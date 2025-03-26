@@ -3,43 +3,43 @@ const { createContainer, asClass, asValue } = require("awilix");
 
 const sequelize = require("@db");
 //Repositories
-const UserRepository = require("@repositories/user.repository");
-const CompanyRepository = require("@repositories/company.repository");
-const RoleRepository = require("@repositories/role.repository");
-const RefreshTokenRepository = require("@repositories/refreshToken.repository");
+const UserRepository = require("@domain/repositories/user.repository");
+const CompanyRepository = require("@domain/repositories/company.repository");
+const RoleRepository = require("@domain/repositories/role.repository");
+const RefreshTokenRepository = require("@domain/repositories/refreshToken.repository");
 //UserUseCases
-const CreateUserUseCase = require("@usecases/user/create-user.usecase");
-const DeleteUserUseCase = require("@usecases/user/delete-user.usecase");
-const FindUserUseCase = require("@usecases/user/find-user.usecase");
-const FindUsersUseCase = require("@usecases/user/find-users.usecase");
-const UpdateUserUseCase = require("@usecases/user/update-user.usecase");
+const CreateUserUseCase = require("@application/usecases/user/create-user.usecase");
+const DeleteUserUseCase = require("@application/usecases/user/delete-user.usecase");
+const FindUserUseCase = require("@application/usecases/user/find-user.usecase");
+const FindUsersUseCase = require("@application/usecases/user/find-users.usecase");
+const UpdateUserUseCase = require("@application/usecases/user/update-user.usecase");
 //CompanyUseCases
-const CreateCompanyUseCase = require("@usecases/company/create-company.usecase");
-const DeleteCompanyUseCase = require("@usecases/company/delete-company.usecase");
-const FindCompanyUseCase = require("@usecases/company/find-company.usecase");
-const FindCompaniesUseCase = require("@usecases/company/find-companies.usecase");
-const UpdateCompanyUseCase = require("@usecases/company/update-company.usecase");
+const CreateCompanyUseCase = require("@application/usecases/company/create-company.usecase");
+const DeleteCompanyUseCase = require("@application/usecases/company/delete-company.usecase");
+const FindCompanyUseCase = require("@application/usecases/company/find-company.usecase");
+const FindCompaniesUseCase = require("@application/usecases/company/find-companies.usecase");
+const UpdateCompanyUseCase = require("@application/usecases/company/update-company.usecase");
 //RoleUseCases
-const CreateRoleUseCase = require("@usecases/role/create-role.usecase");
-const DeleteRoleUseCase = require("@usecases/role/delete-role.usecase");
-const FindRoleUseCase = require("@usecases/role/find-role.usecase");
-const FindRolesUseCase = require("@usecases/role/find-roles.usecase");
-const UpdateRoleUseCase = require("@usecases/role/update-role.usecase");
+const CreateRoleUseCase = require("@application/usecases/role/create-role.usecase");
+const DeleteRoleUseCase = require("@application/usecases/role/delete-role.usecase");
+const FindRoleUseCase = require("@application/usecases/role/find-role.usecase");
+const FindRolesUseCase = require("@application/usecases/role/find-roles.usecase");
+const UpdateRoleUseCase = require("@application/usecases/role/update-role.usecase");
 //RefreshTokenUseCases
-const UpsertTokenUseCase = require("@usecases/refresh-token/upsert-token.usecase");
-const RevokeToken = require("@usecases/refresh-token/revoke-token.usecase");
-const GetTokenUseCase = require("@usecases/refresh-token/get-token.usecase");
+const UpsertTokenUseCase = require("@application/usecases/refresh-token/upsert-token.usecase");
+const RevokeToken = require("@application/usecases/refresh-token/revoke-token.usecase");
+const GetTokenUseCase = require("@application/usecases/refresh-token/get-token.usecase");
 //AuthUseCases
-const SignInUseCase = require("@usecases/auth/sign-in.usecase");
-const SignUpUseCase = require("@usecases/auth/sign-up.usecase");
-const UserInfoUseCase = require("@usecases/auth/user-info.usecase");
+const SignInUseCase = require("@application/usecases/auth/sign-in.usecase");
+const SignUpUseCase = require("@application/usecases/auth/sign-up.usecase");
+const UserInfoUseCase = require("@application/usecases/auth/user-info.usecase");
 //Services
-const TokenService = require("@services/token.service");
+const TokenService = require("@infraestructure/services/token.service");
 //Controllers
-const UserController = require("@controllers/user.controller");
-const CompanyController = require("@controllers/company.controller");
-const RoleController = require("@controllers/role.controller");
-const AuthController = require("@controllers/auth.controller");
+const UserController = require("@interfaces/controllers/user.controller");
+const CompanyController = require("@interfaces/controllers/company.controller");
+const RoleController = require("@interfaces/controllers/role.controller");
+const AuthController = require("@interfaces/controllers/auth.controller");
 const container = createContainer();
 
 //Primero registra los modelos de la base de datos
