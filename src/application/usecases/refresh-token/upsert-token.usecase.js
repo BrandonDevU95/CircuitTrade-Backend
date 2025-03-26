@@ -1,4 +1,4 @@
-const { runInTransaction } = require('@utils/transaction.utils');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class UpsertTokenUseCase {
     constructor({ refreshTokenRepo }) {

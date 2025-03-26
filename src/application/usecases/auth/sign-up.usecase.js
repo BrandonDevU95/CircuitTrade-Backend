@@ -1,7 +1,7 @@
 const { Op } = require('sequelize');
-const AuthDTO = require('@dtos/auth.dto');
-const AuthEntity = require('@entities/auth.entity');
-const { runInTransaction } = require('@utils/transaction.utils');
+const AuthDTO = require('@application/dtos/auth.dto');
+const AuthEntity = require('@domain/entities/auth.entity');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class SignUpUseCase {
     constructor({

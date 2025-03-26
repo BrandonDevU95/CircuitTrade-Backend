@@ -1,8 +1,8 @@
 const boom = require('@hapi/boom');
-const AuthDTO = require('@dtos/auth.dto');
-const AuthEntity = require('@entities/auth.entity');
-const { verifyPassword } = require('@utils/auth.utils');
-const { runInTransaction } = require('@utils/transaction.utils');
+const AuthDTO = require('@application/dtos/auth.dto');
+const AuthEntity = require('@domain/entities/auth.entity');
+const { verifyPassword } = require('@infrastructure/utils/auth.utils');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class SignInUseCase {
     constructor({

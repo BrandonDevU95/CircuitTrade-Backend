@@ -1,5 +1,5 @@
 const boom = require('@hapi/boom');
-const { runInTransaction } = require('@utils/transaction.utils');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class DeleteUserUseCase {
     constructor({ userRepo }) {

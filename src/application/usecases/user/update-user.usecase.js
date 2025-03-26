@@ -1,7 +1,7 @@
 const boom = require('@hapi/boom');
-const UserDTO = require('@dtos/user.dto');
-const UserEntity = require('@entities/user.entity');
-const { runInTransaction } = require('@utils/transaction.utils');
+const UserDTO = require('@application/dtos/user.dto');
+const UserEntity = require('@domain/entities/user.entity');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class UpdateUserUsecase {
     constructor({ userRepo, roleRepo }) {

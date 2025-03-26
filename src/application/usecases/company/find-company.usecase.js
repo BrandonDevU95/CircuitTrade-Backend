@@ -1,4 +1,4 @@
-const CompanyDTO = require('@dtos/company.dto');
+const CompanyDTO = require('@application/dtos/company.dto');
 
 class FindCompanyUseCase {
     constructor({ companyRepo }) {

@@ -1,6 +1,6 @@
-const RoleDTO = require('@dtos/role.dto');
-const RoleEntity = require('@entities/role.entity');
-const { runInTransaction } = require('@utils/transaction.utils');
+const RoleDTO = require('@application/dtos/role.dto');
+const RoleEntity = require('@domain/entities/role.entity');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class CreateRoleUseCase {
     constructor({ roleRepo }) {

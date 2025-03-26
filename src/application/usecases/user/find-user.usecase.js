@@ -1,4 +1,4 @@
-const UserDTO = require('@dtos/user.dto');
+const UserDTO = require('@application/dtos/user.dto');
 
 class FindUserUseCase {
     constructor({ userRepo }) {

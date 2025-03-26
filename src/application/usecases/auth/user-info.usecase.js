@@ -1,6 +1,6 @@
 const boom = require('@hapi/boom');
-const AuthDTO = require('@dtos/auth.dto');
-const { runInTransaction } = require('@utils/transaction.utils');
+const AuthDTO = require('@application/dtos/auth.dto');
+const { runInTransaction } = require('@infrastructure/utils/transaction.utils');
 
 class UserInfoUseCase {
     constructor({ userRepo }) {

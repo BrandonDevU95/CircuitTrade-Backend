@@ -1,5 +1,5 @@
 const boom = require('@hapi/boom');
-const RoleDTO = require('@dtos/role.dto');
+const RoleDTO = require('@application/dtos/role.dto');
 
 class FindRolesUseCase {
     constructor({ roleRepo }) {
