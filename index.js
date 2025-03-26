@@ -11,21 +11,21 @@ const rateLimit = require("express-rate-limit");
 
 
 // Custom modules
-const sequelize = require('@db');
-const routerApi = require('@routes');
-const { config, requiredEnvVars } = require('@config/config');
-const configureCors = require('@middlewares/cors');
-const configureAuth = require('@auth');
-const { logger } = require('@logger');
-const morganLoggerHandler = require('@logger/middlewares/morgan.handler');
-const requestLoggerHandler = require('@logger/middlewares/request.handler');
+const sequelize = require('@infrastructure/db');
+const routerApi = require('@interfaces/routes');
+const { config, requiredEnvVars } = require('@infrastructure/config/config');
+const configureCors = require('@interfaces/middlewares/cors');
+const configureAuth = require('@infrastructure/auth');
+const { logger } = require('@infrastructure/logger');
+const morganLoggerHandler = require('@infrastructure/logger/middlewares/morgan.handler');
+const requestLoggerHandler = require('@infrastructure/logger/middlewares/request.handler');
 const {
     logErrors,
     ormErrorHandler,
     boomErrorHandler,
     errorHandler,
     notFoundHandler,
-} = require('@middlewares/error.handler');
+} = require('@interfaces/middlewares/error.handler');
 
 requiredEnvVars.forEach((envVar) => {
     if (!process.env[envVar]) {
