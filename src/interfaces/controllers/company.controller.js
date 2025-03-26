@@ -4,12 +4,14 @@ class CompanyController {
         deleteCompanyUseCase,
         findCompanyUseCase,
         findCompaniesUseCase,
+        findCompanyUsersUseCase,
         updateCompanyUseCase
     }) {
         this.createCompanyUseCase = createCompanyUseCase;
         this.deleteCompanyUseCase = deleteCompanyUseCase;
         this.findCompanyUseCase = findCompanyUseCase;
         this.findCompaniesUseCase = findCompaniesUseCase;
+        this.findCompanyUsersUseCase = findCompanyUsersUseCase;
         this.updateCompanyUseCase = updateCompanyUseCase
     }
 
@@ -21,6 +23,12 @@ class CompanyController {
     async getCompany(req, res) {
         const { id } = req.params;
         const company = await this.findCompanyUseCase.execute(id);
+        res.json(company);
+    }
+
+    async getCompanyUsers(req, res) {
+        const { id } = req.params;
+        const company = await this.findCompanyUsersUseCase.execute(id);
         res.json(company);
     }
 

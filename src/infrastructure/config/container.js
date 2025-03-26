@@ -17,6 +17,7 @@ const UpdateUserUseCase = require("@application/usecases/user/update-user.usecas
 const CreateCompanyUseCase = require("@application/usecases/company/create-company.usecase");
 const DeleteCompanyUseCase = require("@application/usecases/company/delete-company.usecase");
 const FindCompanyUseCase = require("@application/usecases/company/find-company.usecase");
+const FindCompanyUsersUseCase = require("@application/usecases/company/find-company-users.usecase");
 const FindCompaniesUseCase = require("@application/usecases/company/find-companies.usecase");
 const UpdateCompanyUseCase = require("@application/usecases/company/update-company.usecase");
 //RoleUseCases
@@ -101,6 +102,9 @@ container.register({
     findCompaniesUseCase: asClass(FindCompaniesUseCase).inject(() => ({
         companyRepo: container.resolve("companyRepo"),
     })),
+    findCompanyUsersUseCase: asClass(FindCompanyUsersUseCase).inject(() => ({
+        companyRepo: container.resolve("companyRepo"),
+    })),
     updateCompanyUseCase: asClass(UpdateCompanyUseCase).inject(() => ({
         companyRepo: container.resolve("companyRepo"),
     })),
@@ -169,6 +173,7 @@ container.register({
         deleteCompanyUseCase: container.resolve("deleteCompanyUseCase"),
         findCompanyUseCase: container.resolve("findCompanyUseCase"),
         findCompaniesUseCase: container.resolve("findCompaniesUseCase"),
+        findCompanyUsersUseCase: container.resolve("findCompanyUsersUseCase"),
         updateCompanyUseCase: container.resolve("updateCompanyUseCase"),
     })),
     roleController: asClass(RoleController).inject(() => ({
