@@ -1,6 +1,6 @@
-const sequelize = require('@db');
-const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@utils/constants');
-const { accessCookieOptions, refreshCookieOptions } = require('@utils/cookie.utils');
+const sequelize = require('@infrastructure/db');
+const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@infrastructure/utils/constants');
+const { accessCookieOptions, refreshCookieOptions } = require('@infrastructure/utils/cookie.utils');
 
 class AuthController {
     constructor({

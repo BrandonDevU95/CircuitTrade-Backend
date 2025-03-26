@@ -1,6 +1,6 @@
+const { logger } = require('@infrastructure/logger');
+const { config } = require('@infrastructure/config/config');
 const { ValidationError, UniqueConstraintError } = require('sequelize');
-const { logger } = require('@logger');
-const { config } = require('@config/config');
 
 const errorLogger = logger.injectContext('ERROR');
 

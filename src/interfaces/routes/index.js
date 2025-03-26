@@ -1,9 +1,9 @@
 const express = require('express');
 
-const companiesRouter = require('./companies.router');
+const authRouter = require('./auth.router');
 const rolesRouter = require('./roles.router');
 const usersRouter = require('./users.router');
-const authRouter = require('./auth.router');
+const companiesRouter = require('./companies.router');
 
 function routerApi(app) {
 	const router = express.Router();

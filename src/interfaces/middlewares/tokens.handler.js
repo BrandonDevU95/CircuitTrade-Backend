@@ -1,8 +1,8 @@
 // auth.handler.js
 const boom = require('@hapi/boom');
-const container = require('@config/container');
-const { accessCookieOptions } = require('@utils/cookie.utils');
-const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@utils/constants');
+const container = require('@infrastructure/config/container');
+const { accessCookieOptions } = require('@infrastructure/utils/cookie.utils');
+const { ACCESS_TOKEN, REFRESH_TOKEN } = require('@infrastructure/utils/constants');
 
 const tokenService = container.resolve('tokenService');
 const getTokenUseCase = container.resolve('getTokenUseCase');

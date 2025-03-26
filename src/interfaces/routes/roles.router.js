@@ -1,11 +1,11 @@
 const express = require('express');
-const container = require('@config/container');
-const validatorHandler = require('@middlewares/validator.handler');
+const container = require('@infrastructure/config/container');
+const validatorHandler = require('@interfaces/middlewares/validator.handler');
 const {
 	createRoleSchema,
 	updateRoleSchema,
 	getRoleSchema,
-} = require('@schemas/role.schema');
+} = require('@interfaces/schemas/role.schema');
 const router = express.Router();
 
 const controller = container.resolve('roleController');

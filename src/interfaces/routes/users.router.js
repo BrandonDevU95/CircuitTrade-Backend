@@ -1,7 +1,7 @@
 const express = require('express');
-const container = require('@config/container');
-const validatorHandler = require('@middlewares/validator.handler');
-const { createUserSchema, updateUserSchema, getUserSchema } = require('@schemas/user.schema');
+const container = require('@infrastructure/config/container');
+const validatorHandler = require('@interfaces/middlewares/validator.handler');
+const { createUserSchema, updateUserSchema, getUserSchema } = require('@interfaces/schemas/user.schema');
 const router = express.Router();
 
 const controller = container.resolve("userController");

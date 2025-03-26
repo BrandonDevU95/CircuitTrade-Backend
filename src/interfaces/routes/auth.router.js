@@ -1,9 +1,9 @@
 const express = require('express');
 const passport = require('passport');
-const container = require('@config/container');
-const validatorHandler = require('@middlewares/validator.handler');
-const { signInSchema, signUpSchema } = require('@schemas/auth.schema');
-const { accessTokenHandler, refreshTokenHandler } = require('@middlewares/tokens.handler');
+const container = require('@infrastructure/config/container');
+const validatorHandler = require('@interfaces/middlewares/validator.handler');
+const { signInSchema, signUpSchema } = require('@interfaces/schemas/auth.schema');
+const { accessTokenHandler, refreshTokenHandler } = require('@interfaces/middlewares/tokens.handler');
 const router = express.Router();
 
 const controller = container.resolve('authController');
