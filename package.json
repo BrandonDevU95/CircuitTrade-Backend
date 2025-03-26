@@ -70,19 +70,9 @@
 		"npm": ">=9.0.0"
 	},
 	"_moduleAliases": {
-		"@auth": "src/auth",
-		"@config": "src/config",
-		"@db": "src/db",
-		"@middlewares": "src/middlewares",
-		"@routes": "src/routes",
-		"@schemas": "src/schemas",
-		"@controllers": "src/controllers",
-		"@repositories": "src/repositories",
-		"@entities": "src/entities",
-		"@services": "src/services",
-		"@usecases": "src/usecases",
-		"@utils": "src/utils",
-		"@dtos": "src/dtos",
-		"@logger": "src/logger"
+		"@application": "src/application",
+		"@damain": "src/domain",
+		"@infrastructure": "src/infrastructure",
+		"@interfaces": "src/interfaces"
 	}
 }
