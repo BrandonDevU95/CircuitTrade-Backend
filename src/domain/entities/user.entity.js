@@ -1,5 +1,5 @@
 const boom = require('@hapi/boom');
-const { encryptPassword, verifyPassword } = require('@utils/auth.utils');
+const { encryptPassword, verifyPassword } = require('@infrastructure/utils/auth.utils');
 
 class UserEntity {
     constructor(rawData) {
