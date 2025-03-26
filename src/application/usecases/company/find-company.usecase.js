@@ -7,9 +7,7 @@ class FindCompanyUseCase {
     }
 
     async execute(id) {
-        const company = await this.companyRepo.findById(id, {
-            rejectOnEmpty: boom.notFound('Company not found')
-        });
+        const company = await this.companyRepo.findById(id);
 
         return CompanyDTO.fromDatabase(company);
     }
