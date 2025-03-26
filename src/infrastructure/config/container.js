@@ -1,7 +1,7 @@
 
 const { createContainer, asClass, asValue } = require("awilix");
 
-const sequelize = require("@db");
+const sequelize = require("@infrastructure/db");
 //Repositories
 const UserRepository = require("@domain/repositories/user.repository");
 const CompanyRepository = require("@domain/repositories/company.repository");
@@ -34,7 +34,7 @@ const SignInUseCase = require("@application/usecases/auth/sign-in.usecase");
 const SignUpUseCase = require("@application/usecases/auth/sign-up.usecase");
 const UserInfoUseCase = require("@application/usecases/auth/user-info.usecase");
 //Services
-const TokenService = require("@infraestructure/services/token.service");
+const TokenService = require("@infrastructure/services/token.service");
 //Controllers
 const UserController = require("@interfaces/controllers/user.controller");
 const CompanyController = require("@interfaces/controllers/company.controller");

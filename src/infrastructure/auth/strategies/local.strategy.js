@@ -1,5 +1,5 @@
 const { Strategy } = require('passport-local');
-const container = require('@infraestructure/config/container');
+const container = require('@infrastructure/config/container');
 
 const signInUseCase = container.resolve('signInUseCase');
 

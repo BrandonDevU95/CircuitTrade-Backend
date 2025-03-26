@@ -5,7 +5,7 @@ const {
 	createCompanySchema,
 	updateCompanySchema,
 	getCompanySchema,
-} = require('@schemas/company.schema');
+} = require('@interfaces/schemas/company.schema');
 const router = express.Router();
 
 const controller = container.resolve('companyController');
